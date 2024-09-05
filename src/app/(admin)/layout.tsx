@@ -1,16 +1,16 @@
-import "@/styles/globals.css";
+import getQueryClient from "@/hooks/getQueryClient";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import React from "react";
 
-import { GeistSans } from "geist/font/sans";
-
-export default function RootLayout({
+export default function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const queryClient = getQueryClient();
+  const dehydratedState = dehydrate(queryClient);
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
-      <body>
-        <h1>ADMIN LAYOUT</h1>
-        {children}
-      </body>
-    </html>
+    <HydrationBoundary state={dehydratedState}>
+      <h1>ADMIN LAYOUT</h1>
+      {children}
+    </HydrationBoundary>
   );
 }

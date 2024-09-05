@@ -1,10 +1,10 @@
-export default function AuthedUser({
+export default function CustomerLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   // check for authentication
   return (
     <div>
-      <h1>AUTHENTICATED USER</h1>
+      <h1>CUSTOMER</h1>
       {children}
     </div>
   );

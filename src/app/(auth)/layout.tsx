@@ -1,16 +1,12 @@
-import "@/styles/globals.css";
+import React from "react";
 
-import { GeistSans } from "geist/font/sans";
-
-export default function RootLayout({
+export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
-      <body>
-        <h1>AUTH LAYOUT</h1>
-        {children}
-      </body>
-    </html>
+    <React.Fragment>
+      <h1>AUTH LAYOUT</h1>
+      {children}
+    </React.Fragment>
   );
 }
