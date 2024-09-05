@@ -1,4 +1,7 @@
 
-# nextjs-shadcn-template
-This is my version of a frontend application stack with nextjs and shadcn, inspired by t3 stack.
+# KoiFarmShop
+This is the front end for the KoiFarmShop project. KoiFarmShop allows users to buy and sell Koi fishes.
+
+This project is part of the PRN231 Fall 2024 Group 5 project.
+
 
