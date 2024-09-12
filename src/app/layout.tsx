@@ -1,7 +1,6 @@
 import QueryProvider from "@/components/shared/QueryProvider";
 import { Toaster } from "@/components/ui/toaster";
 import "@/styles/globals.css";
-
 import { GeistSans } from "geist/font/sans";
 
 export default function RootLayout({
@@ -10,7 +9,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
-        <h1>ROOT LAYOUT</h1>
         <QueryProvider>
           {children}
           <Toaster />
