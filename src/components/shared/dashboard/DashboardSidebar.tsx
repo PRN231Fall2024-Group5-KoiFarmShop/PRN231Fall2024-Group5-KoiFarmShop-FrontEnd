@@ -11,7 +11,7 @@ const iconComponents: any = {
   LineChart: LineChart,
 };
 
-interface SidebarItem {
+export interface SidebarItem {
   icon: string;
   name: string;
   href: string;

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 
 export default function AdminPage() {
-  return <div>
+  return <>
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">Inventory</h1>
       </div>
@@ -18,5 +18,5 @@ export default function AdminPage() {
           <Button className="mt-4">Add Product</Button>
         </div>
       </div>
-  </div>;
+  </>;
 }
