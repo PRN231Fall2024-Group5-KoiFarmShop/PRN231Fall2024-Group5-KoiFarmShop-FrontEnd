@@ -1,7 +1,7 @@
 // Sidebar.tsx
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Home, ShoppingCart, Package, Users, LineChart } from "lucide-react";
+import { Home, ShoppingCart, Package, Users, LineChart, Settings, Clipboard, Edit, PlusCircle, History, PackageCheck } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -12,6 +12,12 @@ const iconComponents: any = {
   Package: Package,
   Users: Users,
   LineChart: LineChart,
+  Settings: Settings,
+  Clipboard: Clipboard,
+  Edit: Edit,
+  PlusCircle: PlusCircle,
+  History: History,
+  PackageCheck: PackageCheck
 };
 
 export interface SidebarItem {

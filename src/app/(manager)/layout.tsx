@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/shared/dashboard/DashboardLayout";
-import { STAFF_SIDEBAR } from "@/components/shared/dashboard/sidebar";
+import { MANAGER_SIDEBAR } from "@/components/shared/dashboard/sidebar";
 import getQueryClient from "@/hooks/getQueryClient";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import React from "react";
@@ -12,7 +12,7 @@ export default function ManagerLayout({
   return (
     <HydrationBoundary state={dehydratedState}>
       <DashboardLayout
-        sidebarArray={STAFF_SIDEBAR}
+        sidebarArray={MANAGER_SIDEBAR}
         title="Welcome home, Manager"
       >
         {children}
