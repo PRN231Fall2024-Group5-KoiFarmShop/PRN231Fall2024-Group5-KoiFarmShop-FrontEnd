@@ -14,6 +14,7 @@ export default function StaffLayout({
     <HydrationBoundary state={dehydratedState}>
       <DashboardLayout
         sidebarArray={STAFF_SIDEBAR}
+        title="Welcome home, Staff"
       >
         {children}
       </DashboardLayout>

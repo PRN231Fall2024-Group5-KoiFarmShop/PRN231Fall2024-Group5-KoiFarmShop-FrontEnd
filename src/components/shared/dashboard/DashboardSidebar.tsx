@@ -2,6 +2,9 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Home, ShoppingCart, Package, Users, LineChart } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 const iconComponents: any = {
   Home: Home,
@@ -48,3 +51,20 @@ export function DashboardSidebar({ items }: { items: SidebarItem[] }) {
     </div>
   );
 }
+
+export function MobileSidebar({ items }: { items: SidebarItem[] }) {
+    return (
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle navigation menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="flex flex-col">
+          {/* Mobile Sidebar content */}
+          <DashboardSidebar items={items} />
+        </SheetContent>
+      </Sheet>
+    );
+  }

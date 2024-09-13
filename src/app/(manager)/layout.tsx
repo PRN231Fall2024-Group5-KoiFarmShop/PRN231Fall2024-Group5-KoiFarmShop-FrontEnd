@@ -13,6 +13,7 @@ export default function ManagerLayout({
     <HydrationBoundary state={dehydratedState}>
       <DashboardLayout
         sidebarArray={STAFF_SIDEBAR}
+        title="Welcome home, Manager"
       >
         {children}
       </DashboardLayout>
