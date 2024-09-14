@@ -3,43 +3,40 @@ export const ADMIN_SIDEBAR = [{
     "name": "Dashboard - Admin",
     "href": "#"
     }, {
-    "icon": "ShoppingCart",
-    "name": "Orders",
-    "href": "#",
-    "badge": "6"
-    }, {
-    "icon": "Package",
-    "name": "Products",
-    "href": "#",
-    "active": true
-    }, {
     "icon": "Users",
-    "name": "Customers",
+    "name": "Manage Users",
     "href": "#"
     }, {
-    "icon": "LineChart",
-    "name": "Analytics",
+    "icon": "Settings",
+    "name": "System Config",
     "href": "#"
-}]
+}];
 
 export const MANAGER_SIDEBAR = [{
     "icon": "Home",
     "name": "Dashboard - Manager",
     "href": "#"
     }, {
-    "icon": "Package",
-    "name": "Products",
-    "href": "#",
-    "active": true
-    }, {
     "icon": "Users",
-    "name": "Customers",
+    "name": "Manage Staff",
     "href": "#"
     }, {
-    "icon": "LineChart",
-    "name": "Analytics",
+    "icon": "Package",
+    "name": "Manage Fish",
     "href": "#"
-}]
+    }, {
+    "icon": "Clipboard",
+    "name": "Review and Assign Consignments",
+    "href": "#"
+    }, {
+    "icon": "PackageCheck",
+    "name": "Manage Sale Requests",
+    "href": "#"
+    }, {
+    "icon": "Edit",
+    "name": "Approve Blogs",
+    "href": "#"
+}];
 
 export const STAFF_SIDEBAR = [{
     "icon": "Home",
@@ -47,15 +44,23 @@ export const STAFF_SIDEBAR = [{
     "href": "#"
     }, {
     "icon": "Package",
-    "name": "Products",
-    "href": "#",
-    "active": true
-    }, {
-    "icon": "Users",
-    "name": "Customers",
+    "name": "Manage Fish",
     "href": "#"
     }, {
-    "icon": "LineChart",
-    "name": "Analytics",
+    "icon": "ShoppingCart",
+    "name": "Manage Orders",
     "href": "#"
-}]
+    }, {
+    "icon": "PlusCircle",
+    "name": "Import Fish",
+    "href": "#"
+    }, {
+    "icon": "Edit",
+    "name": "Manage Blogs",
+    "href": "#"
+    }, {
+    "icon": "History",
+    "name": "Order History",
+    "href": "#"
+}];
+
