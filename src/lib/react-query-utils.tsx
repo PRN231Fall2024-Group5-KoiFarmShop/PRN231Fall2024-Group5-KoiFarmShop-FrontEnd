@@ -1,17 +1,25 @@
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
+interface QueryFnProps<T> {
+    data: T[],
+    isSuccess: boolean,
+    message: string,
+}
+
 export const useEntities = <T extends { id: string }>(
-key: string,
-url: string
+    key: string,
+    url: string
 ) => {
-const entities = useQuery<T[], Error>({
-    queryKey: [key],
-    queryFn: async ({ signal }): Promise<T[]> => {
-    const { data } = await axios.get<T[]>(url, { signal });
-    return data;
-    }
-})
+    const entities = useQuery<QueryFnProps<T>, Error>({
+        queryKey: [key],
+        queryFn: async ({ signal }): Promise<QueryFnProps<T>> => {
+            const { data } = await axios.get<QueryFnProps<T>>(url, { signal });
+            console.log("DATA", data);
+            return data; // Return the full QueryFnProps<T> object
+        }
+    });
+
     return {
         entities,
     };
