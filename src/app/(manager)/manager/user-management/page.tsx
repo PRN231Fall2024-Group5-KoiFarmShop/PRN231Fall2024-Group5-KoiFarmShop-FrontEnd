@@ -1,3 +1,4 @@
+"use client"
 "use memo"
 
 import type { SearchParams } from "@/types"
@@ -9,80 +10,60 @@ import { Shell } from "@/components/shell"
 import { Skeleton } from "@/components/ui/skeleton"
 import { searchParamsSchema } from "./_lib/validations"
 import { UsersTable } from "./_components/users-table"
+import { useEntities } from "@/lib/react-query-utils"
+import { User } from "./_lib/userSchema"
 
 export interface IndexPageProps {
   searchParams: SearchParams
 }
 
-// Static seed data for users
-const seedUsers = [
-  {
-    id: 1,
-    fullName: "John Doe",
-    email: "john.doe@example.com",
-    phoneNumber: "123-456-7890",
-    role: "admin",
-    isActive: true,
-    createdAt: new Date("1990-02-15T00:00:00"),
-    updatedAt: new Date("1990-02-15T00:00:00"),
-  },
-  {
-    id: 2,
-    fullName: "Jane Smith",
-    email: "jane.smith@example.com",
-    phoneNumber: "987-654-3210",
-    role: "manager",
-    isActive: true,
-    createdAt: new Date("1990-02-15T00:00:00"),
-    updatedAt: new Date("1990-02-15T00:00:00"),
-  },
-  {
-    id: 3,
-    fullName: "Alice Johnson",
-    email: "alice.johnson@example.com",
-    phoneNumber: "555-123-4567",
-    role: "staff",
-    isActive: false,
-    createdAt: new Date("1990-02-15T00:00:00"),
-    updatedAt: new Date("1990-02-15T00:00:00"),
-  },
-  // Add more seed users as needed
-];
+const url = "https://localhost:8081/api/v1/";
+const table = "users";
 
-export default async function IndexPage({ searchParams }: IndexPageProps) {
+export default function IndexPage({ searchParams }: IndexPageProps) {
   const search = searchParamsSchema.parse(searchParams)
 
-  // Static users list as seed data
+  // Fetch users using React Query
+  const { entities } = useEntities<User>("users", `${url}${table}`);
+
+  // Handle loading and error states from React Query
+  if (entities.isLoading) {
+    return (
+      <Shell className="gap-2">
+        <Skeleton className="h-7 w-52" />
+        <DataTableSkeleton
+          columnCount={5}
+          searchableColumnCount={1}
+          filterableColumnCount={2}
+          cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem"]}
+          shrinkZero
+        />
+      </Shell>
+    );
+  }
+
+  if (entities.isError) {
+    return <div>Error: {entities.error.message}</div>;
+  }
+
+  // Prepare the data to be passed to UsersTable
   const usersPromise = {
-    data: seedUsers,
-    pageCount: 1,
+    data: entities.data?.data, // This will be the users array fetched from the API
+    pageCount: 2, // Adjust this if you have pagination
   }
 
   return (
     <Shell className="gap-2">
-        <React.Suspense fallback={<Skeleton className="h-7 w-52" />}>
-          <div className="flex items-center justify-between gap-2">
-            <h1 className="text-2xl font-bold">Users Manager</h1>
-            <DateRangePicker
-                triggerSize="sm"
-                triggerClassName="ml-auto w-56 sm:w-60"
-                align="end"
-            />
-          </div>
-        </React.Suspense>
-        <React.Suspense
-          fallback={
-            <DataTableSkeleton
-              columnCount={5}
-              searchableColumnCount={1}
-              filterableColumnCount={2}
-              cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem"]}
-              shrinkZero
-            />
-          }
-        >
-          <UsersTable usersPromise={usersPromise} />
-        </React.Suspense>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold">Users Manager</h1>
+        <DateRangePicker
+          triggerSize="sm"
+          triggerClassName="ml-auto w-56 sm:w-60"
+          align="end"
+        />
+      </div>
+
+      <UsersTable usersPromise={usersPromise} />
     </Shell>
   )
 }

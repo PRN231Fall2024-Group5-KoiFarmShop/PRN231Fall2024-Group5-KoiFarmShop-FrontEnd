@@ -11,7 +11,7 @@ import { UsersTableToolbarActions } from "./users-table-toolbar-actions" // Acti
 import { UsersTableFloatingBar } from "./users-table-floating-bar"
 
 interface UsersTableProps {
-  usersPromise: { data: any[], pageCount: number }
+  usersPromise: { data: any, pageCount: number }
 }
 
 export function UsersTable({ usersPromise }: UsersTableProps) {

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Define the basic User type
 export type User = {
-  id: number;
+  id: string;
   fullName: string;
   unsignFullName: string;
   email: string;
