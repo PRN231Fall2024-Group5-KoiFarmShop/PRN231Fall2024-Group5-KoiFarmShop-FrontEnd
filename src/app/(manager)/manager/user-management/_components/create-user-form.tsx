@@ -20,6 +20,7 @@ import {
 import * as React from "react"
 import { type UseFormReturn } from "react-hook-form"
 import { CreateUserDTO } from "../_lib/userSchema"
+import { useState } from "react"
 
 interface CreateUserFormProps
   extends Omit<React.ComponentPropsWithRef<"form">, "onSubmit"> {
@@ -29,9 +30,61 @@ interface CreateUserFormProps
 }
 
 export function CreateUserForm({ form, onSubmit, children }: CreateUserFormProps) {
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null)
+
+  const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="grid grid-cols-2 gap-4">
+          {/* Profile Picture Preview */}
+        <div className="col-span-2 flex flex-col items-center">
+          {profilePicturePreview ? (
+            <img
+              src={profilePicturePreview}
+              alt="Profile Preview"
+              className="h-24 w-24 rounded-full object-cover mb-2"
+            />
+          ) : (
+            <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center mb-2">
+              <span className="text-gray-500">No Image</span>
+            </div>
+          )}
+        </div>
+
+        {/* Profile Picture URL Field */}
+        <FormField
+          control={form.control}
+          name="profilePictureUrl"
+          render={({ field }) => (
+            <FormItem className="col-span-2">
+              <FormLabel>Profile Picture URL</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    handleProfilePictureChange(e)
+                    field.onChange(e)
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Full Name Field */}
         <FormField
           control={form.control}
           name="fullName"
@@ -45,6 +98,8 @@ export function CreateUserForm({ form, onSubmit, children }: CreateUserFormProps
             </FormItem>
           )}
         />
+
+        {/* Email Field */}
         <FormField
           control={form.control}
           name="email"
@@ -58,6 +113,38 @@ export function CreateUserForm({ form, onSubmit, children }: CreateUserFormProps
             </FormItem>
           )}
         />
+
+        {/* Password Field */}
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="123456" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Date of Birth Field */}
+        <FormField
+          control={form.control}
+          name="dob"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date of Birth</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Phone Number Field */}
         <FormField
           control={form.control}
           name="phoneNumber"
@@ -71,6 +158,8 @@ export function CreateUserForm({ form, onSubmit, children }: CreateUserFormProps
             </FormItem>
           )}
         />
+
+        {/* Role Field */}
         <FormField
           control={form.control}
           name="role"
@@ -85,9 +174,9 @@ export function CreateUserForm({ form, onSubmit, children }: CreateUserFormProps
                 </FormControl>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -95,6 +184,24 @@ export function CreateUserForm({ form, onSubmit, children }: CreateUserFormProps
             </FormItem>
           )}
         />
+
+        {/* Address Field */}
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem className="col-span-2">
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input placeholder="1234 Main St, City" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        
+        </div>
         {children}
       </form>
     </Form>

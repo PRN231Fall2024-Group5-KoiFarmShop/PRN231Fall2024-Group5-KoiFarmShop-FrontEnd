@@ -3,6 +3,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Bell, CircleUser, Package2, SmileIcon } from "lucide-react";
 import Link from "next/link";
 import { DashboardSidebar, MobileSidebar, SidebarItem } from "./DashboardSidebar";
+import NotificationBar from "@/components/notification-bar";
 
 export function DashboardLayout({ children, sidebarArray, title = "Welcome home" }: { children: React.ReactNode, sidebarArray: SidebarItem[], title?: string }) {
   return (
@@ -30,10 +31,7 @@ export function DashboardLayout({ children, sidebarArray, title = "Welcome home"
                 <span>{title}</span>
             </Link>
             
-            <Button variant="outline" size="icon" className="ml-auto h-8 w-8">
-                <Bell className="h-4 w-4" />
-                <span className="sr-only">Toggle notifications</span>
-            </Button>
+            <NotificationBar />
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

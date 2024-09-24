@@ -4,69 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
 import { useEntities, useEntity } from "@/lib/react-query-utils";
 import { useState } from "react";
+import { User } from "./user-management/_lib/userSchema";
 
 const url = "https://localhost:8081/api/v1/";
 const table = "users";
 
-interface Users {
-  id: string;
-  email: string;
-  fullName: string;
-  unsignFullName?: string | null;
-  dob: string;
-  phoneNumber: string;
-  profilePictureUrl: string;
-  address: string;
-  isActive: boolean;
-  loyaltyPoints: number;
-  isDeleted: boolean;
-}
-
 export default function ManagerPage() {
-  const { entities } = useEntities<Users>("users", `${url}${table}`);
+  const { entities } = useEntities<User>("users", `${url}${table}`);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { entity, add, update, remove } = useEntity<Users>("users", `${url}${table}`, selectedId);
-
-  const [newUser, setNewUser] = useState<Users>({
-    id: "0",
-    email: "",
-    fullName: "",
-    unsignFullName: "",
-    dob: "",
-    phoneNumber: "",
-    profilePictureUrl: "",
-    address: "",
-    isActive: true,
-    loyaltyPoints: 0,
-    isDeleted: false,
-  });
-
-  const handleAdd = () => {
-    add.mutate(newUser);
-    setNewUser({
-      id: "0",
-      email: "",
-      fullName: "",
-      unsignFullName: "",
-      dob: "",
-      phoneNumber: "",
-      profilePictureUrl: "",
-      address: "",
-      isActive: true,
-      loyaltyPoints: 0,
-      isDeleted: false,
-    });
-  };
-
-  const handleUpdate = () => {
-    if (selectedId) {
-      update.mutate({ ...newUser, id: selectedId });
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    remove.mutate(id);
-  };
 
   return (
     <div className="container mx-auto p-8">
@@ -96,7 +41,7 @@ export default function ManagerPage() {
                 <td>{user.isActive ? "Yes" : "No"}</td>
                 <td>
                   <Button onClick={() => setSelectedId(user.id)}>Edit</Button>
-                  <Button onClick={() => handleDelete(user.id)}>Delete</Button>
+                  {/* <Button onClick={() => handleDelete(user.id)}>Delete</Button> */}
                 </td>
               </tr>
             ))}

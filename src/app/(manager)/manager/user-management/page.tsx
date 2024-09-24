@@ -12,19 +12,19 @@ import { searchParamsSchema } from "./_lib/validations"
 import { UsersTable } from "./_components/users-table"
 import { useEntities } from "@/lib/react-query-utils"
 import { User } from "./_lib/userSchema"
+import { backendUrl } from "@/lib/constraint"
 
 export interface IndexPageProps {
   searchParams: SearchParams
 }
 
-const url = "https://localhost:8081/api/v1/";
 const table = "users";
 
 export default function IndexPage({ searchParams }: IndexPageProps) {
   const search = searchParamsSchema.parse(searchParams)
 
   // Fetch users using React Query
-  const { entities } = useEntities<User>("users", `${url}${table}`);
+  const { entities } = useEntities<User>("users", `${backendUrl}${table}`);
 
   // Handle loading and error states from React Query
   if (entities.isLoading) {
@@ -55,7 +55,7 @@ export default function IndexPage({ searchParams }: IndexPageProps) {
   return (
     <Shell className="gap-2">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Users Manager</h1>
+        <h1 className="text-2xl font-bold">Users Management</h1>
         <DateRangePicker
           triggerSize="sm"
           triggerClassName="ml-auto w-56 sm:w-60"
