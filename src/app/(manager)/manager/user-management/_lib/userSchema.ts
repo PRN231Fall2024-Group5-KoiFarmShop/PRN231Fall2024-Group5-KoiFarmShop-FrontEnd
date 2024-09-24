@@ -13,7 +13,7 @@ export type User = {
   isActive: boolean;
   loyaltyPoints: number;
   isDeleted: boolean;
-  role: "admin" | "manager" | "staff"; // Assuming roles are fixed
+  role: "admin" | "manager" | "staff" | "customer"; // Assuming roles are fixed
   createdAt: Date;
   updatedAt: Date;
 };
@@ -21,8 +21,8 @@ export type User = {
 // Create User DTO validation schema using Zod
 export const createUserSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
-  unsignFullName: z.string().min(1, "Unsign full name is required"),
   email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 characters"),
@@ -31,25 +31,19 @@ export const createUserSchema = z.object({
     .refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date of birth" }),
   profilePictureUrl: z.string().url("Invalid URL"),
   address: z.string().min(1, "Address is required"),
-  isActive: z.boolean(),
-  loyaltyPoints: z.number().nonnegative(),
-  isDeleted: z.boolean(),
-  role: z.enum(["admin", "manager", "staff"]),
+  role: z.enum(["manager", "staff", "customer"]),
 });
 
 // Create User DTO interface
 export interface CreateUserDTO {
   fullName: string;
-  unsignFullName: string;
   email: string;
+  password: string;
   phoneNumber: string;
   dob: string; // ISO string
   profilePictureUrl: string;
   address: string;
-  isActive: boolean;
-  loyaltyPoints: number;
-  isDeleted: boolean;
-  role: "admin" | "manager" | "staff";
+  role: "manager" | "staff" | "customer";
 }
 
 // Update User DTO validation schema using Zod

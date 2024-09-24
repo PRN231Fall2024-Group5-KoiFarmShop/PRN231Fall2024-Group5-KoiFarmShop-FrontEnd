@@ -1,0 +1,1 @@
+export const backendUrl = "https://koi.eventzone.id.vn/api/v1/";

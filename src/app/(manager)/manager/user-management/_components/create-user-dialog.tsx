@@ -1,12 +1,11 @@
 "use client"
 
-import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { PlusIcon, ReloadIcon } from "@radix-ui/react-icons"
+import * as React from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-import { useMediaQuery } from "@/hooks/use-media-query"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -28,33 +27,36 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
+import { createAccount } from "@/lib/api/userAPI"
+import { CreateUserDTO, createUserSchema } from "../_lib/userSchema"
 import { CreateUserForm } from "./create-user-form"
-import { createUserSchema, CreateUserDTO } from "../_lib/userSchema" // Import CreateUserSchema and CreateUserDTO
 
 export function CreateUserDialog() {
   const [open, setOpen] = React.useState(false)
   const [isCreatePending, startCreateTransition] = React.useTransition()
   const isDesktop = useMediaQuery("(min-width: 640px)")
 
-  // useForm should now use the correct DTO type (CreateUserDTO)
   const form = useForm<CreateUserDTO>({
     resolver: zodResolver(createUserSchema),
   })
 
-  // Updated the input type to CreateUserDTO
+  console.log("FORM", form.formState.errors)
+
   function onSubmit(input: CreateUserDTO) {
-    startCreateTransition(async () => {
-      // const { error } = await createUser(input) // Ensure the createUser function is defined
-
-      // if (error) {
-      //   toast.error(error)
-      //   return
-      // }
-
-      form.reset()
-      setOpen(false)
-      toast.success("User created")
+    startCreateTransition(() => {
+      console.log("Create user", input)
+      createAccount(input)
+      .then((res) => {
+        console.log("Create user response", res)
+        setOpen(false)
+        toast.success("User created successfully")
+      })
+      .catch((err) => {
+        console.error("Create user error", err)
+        toast.error("Failed to create user")
+      })
     })
   }
 
@@ -112,20 +114,22 @@ export function CreateUserDialog() {
             Fill in the details below to create a new user.
           </DrawerDescription>
         </DrawerHeader>
-        <DrawerFooter className="gap-2 sm:space-x-0">
-          <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-          <Button disabled={isCreatePending}>
-            {isCreatePending && (
-              <ReloadIcon
-                className="mr-2 size-4 animate-spin"
-                aria-hidden="true"
-              />
-            )}
-            Create
-          </Button>
-        </DrawerFooter>
+        <CreateUserForm form={form} onSubmit={onSubmit}>
+          <DrawerFooter className="gap-2 sm:space-x-0">
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+            <Button disabled={isCreatePending}>
+              {isCreatePending && (
+                <ReloadIcon
+                  className="mr-2 size-4 animate-spin"
+                  aria-hidden="true"
+                />
+              )}
+              Create
+            </Button>
+          </DrawerFooter>
+        </CreateUserForm>
       </DrawerContent>
     </Drawer>
   )
