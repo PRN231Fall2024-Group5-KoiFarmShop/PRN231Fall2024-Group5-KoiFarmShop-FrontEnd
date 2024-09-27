@@ -19,15 +19,15 @@ export const MANAGER_SIDEBAR = [{
     }, {
     "icon": "Users",
     "name": "Manage Staff",
-    "href": "#"
+    "href": "/manager/user-management"
     }, {
     "icon": "Package",
     "name": "Manage Fish",
-    "href": "#"
+    "href": "/manager/fish-management"
     }, {
     "icon": "Clipboard",
-    "name": "Review and Assign Consignments",
-    "href": "#"
+    "name": "Manage Fish Breed",
+    "href": "/manager/breed-management"
     }, {
     "icon": "PackageCheck",
     "name": "Manage Sale Requests",
