@@ -3,7 +3,7 @@ import axios from 'axios';
 const axiosClient = axios.create({
   baseURL: 'https://koi.eventzone.id.vn/api',
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   },
 });
 
