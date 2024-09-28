@@ -111,7 +111,7 @@ export default function KoiFishDetailsPage() {
                     ) : (
                       <div className="w-full h-40 bg-gray-200 rounded-md mb-2"></div>
                     )}
-                    <p className="text-gray-600">{breed.content}</p>
+                    {/* <p className="text-gray-600">{breed.content}</p> */}
                   </div>
                 ))}
               </div>
@@ -125,8 +125,8 @@ export default function KoiFishDetailsPage() {
             <h2 className="text-xl font-bold mb-4">Fish Images</h2>
             {fishDetails?.koiFishImages?.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {fishDetails.koiFishImages.map((image: string, index: number) => (
-                  <img key={index} src={image} alt={`Koi Fish ${index}`} className="w-full h-40 object-cover rounded-md" />
+                {fishDetails.koiFishImages.map((image: any, index: number) => (
+                  <img key={index} src={image?.imageUrl} alt={`Koi Fish ${index}`} className="w-full h-40 object-cover rounded-md" />
                 ))}
               </div>
             ) : (

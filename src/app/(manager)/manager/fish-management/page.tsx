@@ -49,7 +49,7 @@ export default function KoiFishManagementPage() {
   };
 
   const handleEditFish = (fishId: number) => {
-    router.push(`/manager/fish-management/update/${fishId}`); // Navigate to update fish page
+    router.push(`/manager/fish-management/${fishId}/update`); // Navigate to update fish page
   };
 
   const handlePageChange = (newPage: number) => {
