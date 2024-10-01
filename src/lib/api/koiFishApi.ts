@@ -34,7 +34,7 @@ export interface KoiFish {
   koiDiaries: any[]; // You may want to create a specific interface for this
 }
 
-interface KoiBreed {
+export interface KoiBreed {
   id: number;
   name: string;
   content: string;
@@ -42,7 +42,7 @@ interface KoiBreed {
   isDeleted: boolean;
 }
 
-interface KoiFishImage {
+export interface KoiFishImage {
   id: number;
   koiFishId: number;
   name: string | null;

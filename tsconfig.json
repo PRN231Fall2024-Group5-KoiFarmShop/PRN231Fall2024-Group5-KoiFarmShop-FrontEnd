@@ -37,6 +37,6 @@
     "**/*.cjs",
     // "**/*.js",
     ".next/types/**/*.ts"
-  ],
+, "src/lib/configs/firebase.js"  ],
   "exclude": ["node_modules"]
 }
