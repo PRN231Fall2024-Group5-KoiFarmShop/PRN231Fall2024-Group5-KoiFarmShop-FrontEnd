@@ -67,10 +67,7 @@ const Header = () => {
                           className="w-full px-4 py-2 hover:bg-[#F0E8D8]"
                         >
                           <NavigationMenuLink asChild>
-                            <Link
-                              href={`/koi-breeds/${breed}`}
-                              className="w-full"
-                            >
+                            <Link href={`/breed/${breed}`} className="w-full">
                               {breed}
                             </Link>
                           </NavigationMenuLink>
