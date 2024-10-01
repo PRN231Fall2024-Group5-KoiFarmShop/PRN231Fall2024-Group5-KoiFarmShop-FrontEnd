@@ -1,10 +1,15 @@
-import axiosClient from './axiosClient';
+import axiosClient from "./axiosClient";
 
 interface ApiResponse<T> {
   data: T;
   message: string;
   isSuccess: boolean;
-  metadata?: any
+  metadata?: {
+    currentPage: number;
+    totalPages: number;
+    pageSize: number;
+    totalCount: number;
+  };
 }
 
 export interface KoiFish {
@@ -18,35 +23,78 @@ export interface KoiFish {
   personalityTraits: string;
   dailyFeedAmount: number;
   lastHealthCheck: string;
-  koiBreeds: { id: number; name: string }[];
-  koiFishImages: string[];
+  isAvailableForSale: boolean | null;
   price: number;
-  isAvailableForSale: boolean;
-  isConsigned: boolean;
-  isSold: boolean;
-  koiBreedIds?: number[];
-  imageUrl?: string[];
+  isConsigned: boolean | null;
+  isSold: boolean | null;
+  consignedBy: string | null;
+  koiCertificates: any[]; // You may want to create a specific interface for this
+  koiBreeds: KoiBreed[];
+  koiFishImages: KoiFishImage[];
+  koiDiaries: any[]; // You may want to create a specific interface for this
+}
+
+interface KoiBreed {
+  id: number;
+  name: string;
+  content: string;
+  imageUrl: string | null;
+  isDeleted: boolean;
+}
+
+interface KoiFishImage {
+  id: number;
+  koiFishId: number;
+  name: string | null;
+  imageUrl: string;
+}
+
+export interface KoiFishQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  koiBreedId?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: string;
 }
 
 const koiFishApi = {
-  getAll: async ({page}:any): Promise<ApiResponse<KoiFish[]>> => {
-    const response = await axiosClient.get<ApiResponse<KoiFish[]>>('/KoiFish'+`?PageNumber=${page ? page : 1}`);
+  getAll: async (
+    params: KoiFishQueryParams,
+  ): Promise<ApiResponse<KoiFish[]>> => {
+    const response = await axiosClient.get<ApiResponse<KoiFish[]>>("/KoiFish", {
+      params,
+    });
     return response.data;
   },
   getById: async (id: number): Promise<ApiResponse<KoiFish>> => {
-    const response = await axiosClient.get<ApiResponse<KoiFish>>(`/KoiFish/${id}`);
+    const response = await axiosClient.get<ApiResponse<KoiFish>>(
+      `/KoiFish/${id}`,
+    );
     return response.data;
   },
-  create: async (data: Omit<KoiFish, 'id'>): Promise<ApiResponse<KoiFish>> => {
-    const response = await axiosClient.post<ApiResponse<KoiFish>>('/KoiFish', data);
+  create: async (data: Omit<KoiFish, "id">): Promise<ApiResponse<KoiFish>> => {
+    const response = await axiosClient.post<ApiResponse<KoiFish>>(
+      "/KoiFish",
+      data,
+    );
     return response.data;
   },
-  update: async (id: number, data: Omit<KoiFish, 'id'>): Promise<ApiResponse<KoiFish>> => {
-    const response = await axiosClient.put<ApiResponse<KoiFish>>(`/KoiFish/${id}`, data);
+  update: async (
+    id: number,
+    data: Partial<KoiFish>,
+  ): Promise<ApiResponse<KoiFish>> => {
+    const response = await axiosClient.put<ApiResponse<KoiFish>>(
+      `/KoiFish/${id}`,
+      data,
+    );
     return response.data;
   },
   delete: async (id: number): Promise<ApiResponse<null>> => {
-    const response = await axiosClient.delete<ApiResponse<null>>(`/KoiFish/${id}`);
+    const response = await axiosClient.delete<ApiResponse<null>>(
+      `/KoiFish/${id}`,
+    );
     return response.data;
   },
 };
