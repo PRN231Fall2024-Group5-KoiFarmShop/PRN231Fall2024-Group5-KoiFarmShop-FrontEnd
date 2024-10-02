@@ -21,6 +21,7 @@ import PolicyGuide from "./components/PolicyGuide";
 
 import { addToCart } from "@/lib/cart";
 import { useToast } from "@/hooks/use-toast";
+import { formatPriceVND } from "@/lib/utils";
 
 const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
   const { koiId } = params;
@@ -29,6 +30,7 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
   const [koiDetails, setKoiDetails] = useState<KoiFish | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchKoiDetails = async () => {
@@ -58,8 +60,6 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
   }
 
   const breed = koiDetails.koiBreeds[0]?.name || "Unknown Breed";
-
-  const { toast } = useToast();
 
   const handleAddToCart = () => {
     if (koiDetails) {
@@ -145,7 +145,7 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
               {koiDetails.name}
             </h1>
             <p className="mb-4 text-xl font-semibold">
-              Price: ${koiDetails.price}
+              Price: {formatPriceVND(koiDetails.price)}
             </p>
             <div className="mb-4 rounded-lg bg-[#F9F5EC] p-4">
               <p>{koiDetails.personalityTraits}</p>
