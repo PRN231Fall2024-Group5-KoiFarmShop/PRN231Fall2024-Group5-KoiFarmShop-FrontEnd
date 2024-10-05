@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,14 +18,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import authAPI from "@/lib/api/authAPI";
-import { useErrorNotification } from "@/hooks/useErrorNotification";
 import LoadingLine from "@/components/ui/loadingLine";
-import { toast, Toaster } from "sonner";
+import authAPI from "@/lib/api/authAPI";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { toast } from "sonner";
 
 interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -41,7 +39,6 @@ const formLoginSchema = z.object({
 export function LoginForm({ className, ...props }: LoginFormProps) {
   const [passwordVisible, setPasswordVisible] = React.useState<boolean>(false);
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formLoginSchema>>({
     resolver: zodResolver(formLoginSchema),
@@ -108,23 +105,6 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
       toast.error("Login failed: " + error?.message);
     });
   }
-
-  const {
-    mutate: handleLogin,
-    status,
-    error: mutateError,
-  } = useMutation({
-    mutationFn: authAPI.login,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] });
-      router.push("/"); // TODO: route to main page after successful login
-    },
-  });
-
-  useErrorNotification({
-    isError: status === "error",
-    title: mutateError?.message ?? "Login failed",
-  });
 
   const isLoading = status === "pending";
 
