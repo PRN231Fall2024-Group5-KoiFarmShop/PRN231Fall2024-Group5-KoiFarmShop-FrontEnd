@@ -277,7 +277,7 @@ export default function CartPage() {
               <div className="hidden text-sm font-semibold md:flex">
                 <div className="w-2/5 pr-2">Product</div>
                 <div className="w-1/6 text-right">Price</div>
-                <div className="w-1/6 text-center">Quantity</div>
+                {/* <div className="w-1/6 text-center">Quantity</div> */}
                 <div className="w-1/6 text-right">Subtotal</div>
                 <div className="w-1/6 text-center">Consign</div>
                 <div className="w-1/12"></div>
@@ -312,7 +312,7 @@ export default function CartPage() {
                     <div className="mb-2 w-full text-right md:mb-0 md:w-1/6">
                       {formatPriceVND(item.price)}
                     </div>
-                    <div className="mb-2 flex w-full justify-center md:mb-0 md:w-1/6">
+                    {/* <div className="mb-2 flex w-full justify-center md:mb-0 md:w-1/6">
                       <Input
                         type="number"
                         min="1"
@@ -325,7 +325,7 @@ export default function CartPage() {
                         }
                         className="w-16 text-center"
                       />
-                    </div>
+                    </div> */}
                     <div className="mb-2 w-full text-right md:mb-0 md:w-1/6">
                       {formatPriceVND(item.price * item.quantity)}
                     </div>
