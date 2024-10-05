@@ -19,12 +19,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
-// import useLocalStorage from "@/hooks/useLocalStorage";
 import Image from "next/image";
-import { login } from "@/lib/api/authAPI";
+import authAPI from "@/lib/api/authAPI";
 import { useErrorNotification } from "@/hooks/useErrorNotification";
 import LoadingLine from "@/components/ui/loadingLine";
 
@@ -32,16 +30,15 @@ interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const formLoginSchema = z.object({
   email: z.string().min(3, {
-    message: "Email ít nhất 3 ký tự",
+    message: "Email must be at least 3 characters long",
   }),
   password: z.string().min(3, {
-    message: "Password ít nhất 3 ký tự",
+    message: "Password must be at least 3 characters long",
   }),
 });
 
 export function LoginForm({ className, ...props }: LoginFormProps) {
   const [passwordVisible, setPasswordVisible] = React.useState<boolean>(false);
-
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -54,9 +51,57 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formLoginSchema>) {
-    handleLogin({
+    await authAPI.login({
       email: values.email,
       password: values.password,
+    })
+    .then(({data}:any) => {
+      console.log("Login successful", data);
+
+      localStorage.setItem("jwt", data.jwt);
+      localStorage.setItem("refreshToken", data.jwtRefreshToken);
+      localStorage.setItem("userId", data.userId);
+
+      // {
+      //   id: 1,
+      //   email: 'admin@gmail.com',
+      //   fullName: 'Admin',
+      //   unsignFullName: 'Admin',
+      //   dob: '2024-09-10T00:00:00',
+      //   phoneNumber: '0123456789',
+      //   roleName: 'CUSTOMER',
+      //   imageUrl: null,
+      //   address: 'Manager Street, City',
+      //   isActive: true,
+      //   loyaltyPoints: 0,
+      //   isDeleted: false
+
+      authAPI.getCurrentUser()
+      .then(({data}:any) => {
+        console.log("Current user", data);
+        localStorage.setItem("user", JSON.stringify(data));
+
+        if(data.roleName === "ADMIN") {
+          router.push("/admin");
+        } else if(data.roleName === "MANAGER") {
+          router.push("/manager");
+        } else if(data.roleName === "STAFF") {
+          router.push("/staff");
+        } else {
+          router.push("/");
+        }
+
+      })
+      .catch((error) => {
+        console.error("Failed to get current user", error);
+      });
+      
+
+      //queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] });
+      // router.push("/"); // TODO: route to main page after successful login
+    })
+    .catch((error) => {
+      console.error("Login failed", error);
     });
   }
 
@@ -65,16 +110,16 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     status,
     error: mutateError,
   } = useMutation({
-    mutationFn: login,
+    mutationFn: authAPI.login,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] });
-      router.push("/"); //TODO: route to main page
+      router.push("/"); // TODO: route to main page after successful login
     },
   });
 
   useErrorNotification({
     isError: status === "error",
-    title: mutateError?.message ?? "Tạo tài khoản thất bại",
+    title: mutateError?.message ?? "Login failed",
   });
 
   const isLoading = status === "pending";
@@ -90,9 +135,9 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
           <FormField
             control={form.control}
             name="email"
-            render={({ field }: any) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel>Username or email address</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -103,24 +148,24 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
           <FormField
             control={form.control}
             name="password"
-            render={({ field }: any) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex flex-row justify-between">
-                  Your password
+                <FormLabel className="flex justify-between">
+                  Password
                   {passwordVisible ? (
                     <span
-                      className="flex cursor-pointer flex-row items-center gap-2 pr-2"
+                      className="flex cursor-pointer items-center gap-2 pr-2"
                       onClick={() => setPasswordVisible(!passwordVisible)}
                     >
-                      <EyeOffIcon className="h-5 w-5 cursor-pointer" />
+                      <EyeOffIcon className="h-5 w-5" />
                       Hide
                     </span>
                   ) : (
                     <span
-                      className="flex cursor-pointer flex-row items-center gap-2 pr-1"
+                      className="flex cursor-pointer items-center gap-2 pr-1"
                       onClick={() => setPasswordVisible(!passwordVisible)}
                     >
-                      <EyeIcon className="h-5 w-5 cursor-pointer" />
+                      <EyeIcon className="h-5 w-5" />
                       Show
                     </span>
                   )}
@@ -135,15 +180,10 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
               </FormItem>
             )}
           />
-          <div className="flex flex-row-reverse gap-2">
-            <span>
-              <Link
-                href={"/"} //TODO: page ForgetPassword
-                className="inline px-1 hover:underline"
-              >
-                Forgot your password?
-              </Link>
-            </span>
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-sm hover:underline">
+              Forgot your password?
+            </Link>
           </div>
           <Button
             disabled={isLoading}
@@ -154,14 +194,14 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
           </Button>
         </form>
       </Form>
-      <div className="text-neutral-8 flex flex-row items-center justify-between gap-4">
-        <span className="bg-neutral-4 h-[2px] w-full"></span>OR
-        <span className="bg-neutral-4 h-[2px] w-full"></span>
+      <div className="flex items-center justify-between gap-4">
+        <span className="h-[2px] w-full bg-neutral-4"></span>OR
+        <span className="h-[2px] w-full bg-neutral-4"></span>
       </div>
       <div className="flex flex-col gap-4">
         <Button
           variant={"outline"}
-          className="text-neutral-7 flex w-full flex-row gap-2 rounded-full py-5 hover:bg-[#F4F0E7] hover:text-primary"
+          className="text-neutral-7 flex w-full items-center gap-2 rounded-full py-5 hover:bg-[#F4F0E7] hover:text-primary"
         >
           <Image
             src={"/register/google-logo.svg"}
@@ -173,7 +213,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         </Button>
         <Button
           variant={"outline"}
-          className="text-neutral-7 flex w-full flex-row gap-2 rounded-full py-5 hover:bg-[#F4F0E7] hover:text-primary"
+          className="text-neutral-7 flex w-full items-center gap-2 rounded-full py-5 hover:bg-[#F4F0E7] hover:text-primary"
         >
           <Image
             src={"/register/apple-logo.svg"}

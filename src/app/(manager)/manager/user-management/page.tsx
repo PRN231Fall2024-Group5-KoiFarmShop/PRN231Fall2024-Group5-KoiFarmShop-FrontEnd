@@ -1,40 +1,32 @@
-// src/pages/UserManagement.tsx
-
-'use client'
+'use client';
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, PencilIcon, TrashIcon } from "lucide-react";
-import {
-  fetchUserList,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser
-} from "@/lib/api/userAPI";
+import { PencilIcon, TrashIcon, PlusIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
-import { UserCreateDTO, UserResponseDTO } from "@/types/user";
 import { uploadImage } from "@/lib/configs/firebase";
-
-const roles = ["ADMIN", "MANAGER", "STAFF", "CUSTOMER"]; // Define available roles
+import userApi, { User } from "@/lib/api/userAPI";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UserManagementPage() {
-  const [users, setUsers] = useState<UserResponseDTO[]>([]);
-  const [selectedUser, setSelectedUser] = useState<UserResponseDTO | null>(null);
-  const [userFormData, setUserFormData] = useState<UserCreateDTO>({
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true); // For loading skeleton
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userFormData, setUserFormData] = useState<any>({
     email: "",
     password: "",
     fullName: "",
     dob: "",
     phoneNumber: "",
+    imageUrl: "",
     address: "",
-    profilePictureUrl: "", // Add profilePictureUrl to form data
-    roleName: "CUSTOMER" // Default role
+    roleName: "CUSTOMER", // Default role
   });
-  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null); // State for the image file
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [openUserDialog, setOpenUserDialog] = useState(false);
 
   useEffect(() => {
@@ -42,12 +34,16 @@ export default function UserManagementPage() {
   }, []);
 
   const fetchUsers = async () => {
-    const { data } = await fetchUserList();
-    setUsers(data.data);
+    setLoading(true);
+    const response = await userApi.getAll();
+    if (response.isSuccess) {
+      setUsers(response.data);
+    }
+    setLoading(false); 
   };
 
   const handleDeleteUser = async (id: number) => {
-    await deleteUser(id);
+    await userApi.delete(id);
     toast({
       title: "User deleted successfully",
       description: "The user has been deleted successfully",
@@ -55,21 +51,20 @@ export default function UserManagementPage() {
     fetchUsers();
   };
 
-  const handleOpenUserDialog = async (user: UserResponseDTO | null = null) => {
+  const handleOpenUserDialog = (user: User | null = null) => {
     setSelectedUser(user);
     if (user) {
-      const { data } = await getUserById(user.id); // Fetch detailed user data
-      const details = data.data;
       setUserFormData({
-        email: details.email,
-        password: "", // Keep password empty for security
-        fullName: details.fullName,
-        dob: details.dob,
-        phoneNumber: details.phoneNumber,
-        address: details.address,
-        profilePictureUrl: details.profilePictureUrl || "", // Set existing profile picture URL
-        roleName: details.roleName // Set existing role name
+        email: user.email,
+        password: "", // Not updating password unless explicitly set
+        fullName: user.fullName,
+        dob: user.dob,
+        phoneNumber: user.phoneNumber,
+        imageUrl: user.imageUrl || "",
+        address: user.address,
+        roleName: user.roleName,
       });
+      setImagePreview(user.imageUrl || "");
     } else {
       setUserFormData({
         email: "",
@@ -77,65 +72,72 @@ export default function UserManagementPage() {
         fullName: "",
         dob: "",
         phoneNumber: "",
+        imageUrl: "",
         address: "",
-        profilePictureUrl: "", // Reset profile picture URL
-        roleName: "ADMIN" // Default role for new user
+        roleName: "CUSTOMER",
       });
+      setImagePreview(null);
     }
     setOpenUserDialog(true);
   };
 
   const handleCloseUserDialog = () => {
     setOpenUserDialog(false);
-    setProfilePictureFile(null); // Reset file when dialog is closed
+    setImagePreview(null);
   };
 
   const handleUserFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setUserFormData((prev) => ({ ...prev, [name]: value }));
+    setUserFormData((prev:any) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfilePictureFile(file);
-      setUserFormData((prev) => ({ ...prev, profilePictureUrl: "" })); // Reset the URL to ensure it's updated after upload
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
   const handleSaveUser = async () => {
-    let profilePictureUrl = userFormData.profilePictureUrl;
+    let imageUrl = userFormData.imageUrl;
 
-    // Upload image if a new file is selected
-    if (profilePictureFile) {
+    if (imageFile) {
       try {
-        profilePictureUrl = await uploadImage(profilePictureFile);
-      } catch (error) {
+        imageUrl = await uploadImage(imageFile);
+        toast({
+          title: "Image uploaded successfully",
+          description: "The image has been uploaded successfully",
+        });
+      } catch (error: any) {
         toast({
           title: "Image upload failed",
-          description: (error as Error).message,
+          description: error.message,
         });
         return;
       }
     }
 
     if (selectedUser) {
-      await updateUser(selectedUser.id, {
+      await userApi.update(selectedUser.id, {
         ...userFormData,
-        profilePictureUrl, // Include the uploaded URL
-        isActive: true // Assume activation
+        imageUrl,
       });
       toast({
         title: "User updated successfully",
         description: "The user has been updated successfully",
       });
     } else {
-      await createUser({ ...userFormData, profilePictureUrl }); // Include the uploaded URL
+      await userApi.create({
+        ...userFormData,
+        imageUrl,
+      });
       toast({
         title: "User created successfully",
         description: "The user has been created successfully",
       });
     }
+
     handleCloseUserDialog();
     fetchUsers();
   };
@@ -144,43 +146,44 @@ export default function UserManagementPage() {
     <div className="container mx-auto p-4">
       <Toaster />
       <div className="flex items-center justify-between w-full gap-2 mb-6">
-        <h2 className="text-2xl font-bold flex-1">User Management</h2>
+        <h2 className="text-2xl font-bold flex-1">Users</h2>
         <Button variant="default" onClick={() => handleOpenUserDialog(null)}>
           <PlusIcon className="w-4 h-4 mr-2" />
           <span>Create User</span>
         </Button>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200">
+      
+      {/* Loading skeleton */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="w-full h-60 bg-gray-300 rounded-md" />
+          ))}
+        </div>
+      ) : (
+        <table className="min-w-full bg-white border">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b">Profile Picture</th>
-              <th className="py-2 px-4 border-b">Full Name</th>
-              <th className="py-2 px-4 border-b">Email</th>
-              <th className="py-2 px-4 border-b">Phone</th>
-              <th className="py-2 px-4 border-b">Role</th>
-              <th className="py-2 px-4 border-b">Actions</th>
+            <tr className="w-full bg-gray-100">
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Full Name</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Email</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Phone Number</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Role</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">
-                  {user.profilePictureUrl ? (
-                    <img src={user.profilePictureUrl} alt="Profile" className="w-10 h-10 rounded-full" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-300" />
-                  )}
-                </td>
-                <td className="py-2 px-4 border-b">{user.fullName}</td>
-                <td className="py-2 px-4 border-b">{user.email}</td>
-                <td className="py-2 px-4 border-b">{user.phoneNumber}</td>
-                <td className="py-2 px-4 border-b">{user?.roleName}</td> {/* Display role */}
-                <td className="py-2 px-4 border-b">
+              <tr key={user.id} className="border-t border-gray-200 hover:bg-gray-50">
+                <td className="px-6 py-4">{user.fullName}</td>
+                <td className="px-6 py-4">{user.email}</td>
+                <td className="px-6 py-4">{user.phoneNumber}</td>
+                <td className="px-6 py-4">{user.roleName}</td>
+                <td className="px-6 py-4 flex space-x-2">
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => handleOpenUserDialog(user)}
+                    className="w-8 h-8"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </Button>
@@ -188,6 +191,7 @@ export default function UserManagementPage() {
                     variant="destructive"
                     size="icon"
                     onClick={() => handleDeleteUser(user.id)}
+                    className="w-8 h-8"
                   >
                     <TrashIcon className="w-4 h-4" />
                   </Button>
@@ -196,23 +200,14 @@ export default function UserManagementPage() {
             ))}
           </tbody>
         </table>
-      </div>
+      )}
 
-      {/* Dialog for User */}
       <Dialog open={openUserDialog} onOpenChange={setOpenUserDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{selectedUser ? "Update User" : "Create User"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <Input
-              id="email"
-              name="email"
-              value={userFormData.email}
-              onChange={handleUserFormChange}
-              placeholder="Enter email"
-              className="w-full"
-            />
             <Input
               id="fullName"
               name="fullName"
@@ -221,6 +216,25 @@ export default function UserManagementPage() {
               placeholder="Enter full name"
               className="w-full"
             />
+            <Input
+              id="email"
+              name="email"
+              value={userFormData.email}
+              onChange={handleUserFormChange}
+              placeholder="Enter email"
+              className="w-full"
+            />
+            {!selectedUser && (
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={userFormData.password}
+                onChange={handleUserFormChange}
+                placeholder="Enter password"
+                className="w-full"
+              />
+            )}
             <Input
               id="dob"
               name="dob"
@@ -245,37 +259,28 @@ export default function UserManagementPage() {
               placeholder="Enter address"
               className="w-full"
             />
+            <label>Role</label>
             <select
               id="roleName"
               name="roleName"
               value={userFormData.roleName}
               onChange={handleUserFormChange}
-              className="w-full border border-gray-300 rounded p-2"
+              className="w-full border p-2 rounded"
             >
-              {roles.map((role) => (
-                <option key={role} value={role}>{role}</option>
-              ))}
+              <option value="ADMIN">ADMIN</option>
+              <option value="STAFF">STAFF</option>
+              <option value="MANAGER">MANAGER</option>
+              <option value="CUSTOMER">CUSTOMER</option>
             </select>
-            {selectedUser === null && (
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={userFormData.password}
-                onChange={handleUserFormChange}
-                placeholder="Enter password"
-                className="w-full"
-              />
+            <Input id="imageFile" type="file" onChange={handleImageChange} className="w-full" />
+            {imagePreview && (
+              <img src={imagePreview} alt="Preview" className="mt-4 w-full h-40 object-cover" />
             )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full"
-            />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCloseUserDialog}>Cancel</Button>
+            <Button variant="outline" onClick={handleCloseUserDialog}>
+              Cancel
+            </Button>
             <Button variant="default" onClick={handleSaveUser}>
               {selectedUser ? "Update User" : "Create User"}
             </Button>

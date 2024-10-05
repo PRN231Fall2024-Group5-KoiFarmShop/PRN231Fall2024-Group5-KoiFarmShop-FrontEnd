@@ -11,6 +11,7 @@ const config = {
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
     ],
   },
+
 };
 
 export default config;

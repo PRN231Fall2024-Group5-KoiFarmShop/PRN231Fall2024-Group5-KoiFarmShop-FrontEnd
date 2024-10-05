@@ -3,7 +3,7 @@ import axios from "axios";
 const client = axios.create({
   // baseURL: process.env.NEXT_PUBLIC_BASE_URL,
   baseURL: "https://koi.eventzone.id.vn/api/v1",
-  withCredentials: true,
+  // withCredentials: true,
 });
 
 export const request = async (options) => {

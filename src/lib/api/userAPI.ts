@@ -1,57 +1,43 @@
-// src/apis/userApi.ts
+import axiosClient from "./axiosClient";
 
-import { request } from "@/lib/configs/axios.config";
-import { UserCreateDTO, UserUpdateDTO } from "@/types/user";
+interface ApiResponse<T> {
+    data: T;
+    message: string;
+    isSuccess: boolean;
+}
 
-// Fetch all users
-export const fetchUserList = () => {
-  return request({
-    method: "GET",
-    url: `/users`,
-  });
+export interface User {
+  id: number;
+  email: string;
+  fullName: string;
+  dob: string;
+  phoneNumber: string;
+  imageUrl: string | null;
+  address: string;
+  roleName: 'ADMIN' | 'STAFF' | 'MANAGER' | 'CUSTOMER'; // Predefined roles
+}
+
+const userApi = {
+  getAll: async (): Promise<ApiResponse<User[]>> => {
+    const response = await axiosClient.get<ApiResponse<User[]>>('v1/Users');
+    return response.data;
+  },
+  getById: async (id: number): Promise<ApiResponse<User>> => {
+    const response = await axiosClient.get<ApiResponse<User>>(`v1/Users/${id}`);
+    return response.data;
+  },
+  create: async (data: Omit<User, 'id'>): Promise<ApiResponse<User>> => {
+    const response = await axiosClient.post<ApiResponse<User>>('v1/Users', data);
+    return response.data;
+  },
+  update: async (id: number, data: Omit<User, 'id'>): Promise<ApiResponse<User>> => {
+    const response = await axiosClient.put<ApiResponse<User>>(`v1/Users/${id}`, data);
+    return response.data;
+  },
+  delete: async (id: number): Promise<ApiResponse<null>> => {
+    const response = await axiosClient.delete<ApiResponse<null>>(`v1/Users/${id}`);
+    return response.data;
+  },
 };
 
-// Fetch a single user by ID
-export const getUserById = (id: number) => {
-  return request({
-    method: "GET",
-    url: `/users/${id}`,
-  });
-};
-
-// Create a new user
-export const createUser = (data: UserCreateDTO) => {
-  return request({
-    method: "POST",
-    url: `/users`,
-    data,
-  });
-};
-
-// Update a user
-export const updateUser = (id: number, data: UserUpdateDTO) => {
-  return request({
-    method: "PUT",
-    url: `/users/${id}`,
-    data,
-  });
-};
-
-// Delete a user by ID
-export const deleteUser = (id: number) => {
-  return request({
-    method: "DELETE",
-    url: `/users/${id}`,
-  });
-};
-
-// Query users with filters (optional)
-export const queryUser = (query: { [key: string]: any }) => {
-  return request({
-    method: "GET",
-    url: `/users`,
-    params: {
-      ...query,
-    },
-  });
-};
+export default userApi;
