@@ -1,5 +1,6 @@
 import Footer from "@/components/shared/Footer";
 import Header from "@/components/shared/Header";
+import QueryProvider from "@/components/shared/QueryProvider";
 import getQueryClient from "@/hooks/getQueryClient";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import React from "react";
@@ -11,10 +12,8 @@ export default function UserLayout({
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <HydrationBoundary state={dehydratedState}>
-      <Header></Header>
-      {children}
-      <Footer></Footer>
-    </HydrationBoundary>
+    <QueryProvider>
+      <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
+    </QueryProvider>
   );
 }
