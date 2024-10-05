@@ -25,6 +25,7 @@ import Image from "next/image";
 import authAPI from "@/lib/api/authAPI";
 import { useErrorNotification } from "@/hooks/useErrorNotification";
 import LoadingLine from "@/components/ui/loadingLine";
+import { toast, Toaster } from "sonner";
 
 interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -57,29 +58,34 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     })
     .then(({data}:any) => {
       console.log("Login successful", data);
+      if(data?.status == false){
+        toast("Login failed: " + data?.message,);
+        return;
+      }
 
       localStorage.setItem("jwt", data.jwt);
       localStorage.setItem("refreshToken", data.jwtRefreshToken);
       localStorage.setItem("userId", data.userId);
-
-      // {
-      //   id: 1,
-      //   email: 'admin@gmail.com',
-      //   fullName: 'Admin',
-      //   unsignFullName: 'Admin',
-      //   dob: '2024-09-10T00:00:00',
-      //   phoneNumber: '0123456789',
-      //   roleName: 'CUSTOMER',
-      //   imageUrl: null,
-      //   address: 'Manager Street, City',
-      //   isActive: true,
-      //   loyaltyPoints: 0,
-      //   isDeleted: false
+      toast("Login successful");
 
       authAPI.getCurrentUser()
       .then(({data}:any) => {
         console.log("Current user", data);
         localStorage.setItem("user", JSON.stringify(data));
+        // {
+        //   id: 1,
+        //   email: 'admin@gmail.com',
+        //   fullName: 'Admin',
+        //   unsignFullName: 'Admin',
+        //   dob: '2024-09-10T00:00:00',
+        //   phoneNumber: '0123456789',
+        //   roleName: 'ADMIN',
+        //   imageUrl: '',
+        //   address: 'Manager Street, City',
+        //   isActive: null,
+        //   loyaltyPoints: 0,
+        //   isDeleted: false
+        // }
 
         if(data.roleName === "ADMIN") {
           router.push("/admin");
@@ -96,12 +102,10 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         console.error("Failed to get current user", error);
       });
       
-
-      //queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] });
-      // router.push("/"); // TODO: route to main page after successful login
     })
     .catch((error) => {
       console.error("Login failed", error);
+      toast.error("Login failed: " + error?.message);
     });
   }
 

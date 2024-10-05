@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { LoginForm } from "./component/loginForm";
 import Link from "next/link";
+import { Toaster } from "sonner";
 
 function LoginSection() {
   return (
@@ -40,6 +41,7 @@ function LoginSection() {
           <LoginForm className="text-neutral-6 w-full" />
         </div>
       </div>
+      
     </section>
   );
 }
@@ -61,6 +63,7 @@ function LoginPage() {
       <div className="h-full w-full">
         <LoginSection />
       </div>
+      <Toaster />
     </div>
   );
 }

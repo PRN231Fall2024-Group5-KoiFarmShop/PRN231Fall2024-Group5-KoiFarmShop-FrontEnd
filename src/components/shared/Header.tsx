@@ -10,6 +10,10 @@ import {
 } from "@/components/ui/navigation-menu";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuContent, DropdownMenu } from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import { CircleUser } from "lucide-react";
 
 const koiBreeds = [
   "Kohaku",
@@ -32,11 +36,26 @@ const koiBreeds = [
 const navigationItems = [
   { name: "Blogs", href: "/blogs" },
   { name: "FAQ", href: "/faq" },
-  { name: "About Us", href: "/about" },
-  { name: "Login", href: "/login" },
+  { name: "About Us", href: "/about" }
 ];
 
 const Header = () => {
+  const [user, setUser] = useState<any>(null);
+  useEffect(() => {
+    console.log("User", localStorage.getItem("user"));
+    if(localStorage.getItem("user") != null){
+      setUser(JSON.parse(localStorage.getItem("user") as string));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    setUser(null);
+  }
+
   return (
     <header className="border-b bg-[#F4F0E7] text-primary">
       <div className="container mx-auto max-w-[1200px] px-4 py-3">
@@ -93,6 +112,46 @@ const Header = () => {
                   </NavigationMenuItem>
                 ))}
               </NavigationMenuList>
+              {
+                user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" size="icon" className="rounded-full ml-2">
+                        {
+                          user?.imageUrl ? (
+                            <img src={user?.imageUrl} className="rounded-full" />
+                          ) : (
+                            <CircleUser className="h-5 w-5" />
+                          )
+                        }
+                        <span className="sr-only">Toggle user menu</span>
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                    <DropdownMenuItem>Your Fish</DropdownMenuItem>
+                    <DropdownMenuItem>Your Consignment</DropdownMenuItem>
+                    <DropdownMenuItem>Orders</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                ) : (
+                  <div>
+                    <Link href="/login" legacyBehavior passHref>
+                      <NavigationMenuLink
+                        className={
+                          "group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-transparent focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                        }
+                      >
+                        Login
+                      </NavigationMenuLink>
+                    </Link>
+                  </div>
+                )
+              }
             </NavigationMenu>
           </div>
         </div>
