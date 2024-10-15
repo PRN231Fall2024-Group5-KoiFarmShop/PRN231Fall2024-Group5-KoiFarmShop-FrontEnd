@@ -1,33 +1,59 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { PencilIcon, TrashIcon, PlusIcon } from "lucide-react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PencilIcon, TrashIcon, PlusIcon, UserIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { uploadImage } from "@/lib/configs/firebase";
 import userApi, { User } from "@/lib/api/userAPI";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const userSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  dob: z.string().refine((date) => {
+    const parsedDate = new Date(date);
+    const now = new Date();
+    return parsedDate < now && parsedDate > new Date('1900-01-01');
+  }, { message: "Please enter a valid date of birth" }),
+  phoneNumber: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  roleName: z.enum(["ADMIN", "STAFF", "MANAGER", "CUSTOMER"]),
+  imageUrl: z.string().optional(),
+});
+
+type UserFormValues = z.infer<typeof userSchema>;
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // For loading skeleton
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [userFormData, setUserFormData] = useState<any>({
-    email: "",
-    password: "",
-    fullName: "",
-    dob: "",
-    phoneNumber: "",
-    imageUrl: "",
-    address: "",
-    roleName: "CUSTOMER", // Default role
-  });
+  const [openUserDialog, setOpenUserDialog] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [openUserDialog, setOpenUserDialog] = useState(false);
+
+  const form = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      email: "",
+      fullName: "",
+      dob: "",
+      phoneNumber: "",
+      address: "",
+      roleName: "CUSTOMER",
+      imageUrl: "",
+    },
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -39,7 +65,7 @@ export default function UserManagementPage() {
     if (response.isSuccess) {
       setUsers(response.data);
     }
-    setLoading(false); 
+    setLoading(false);
   };
 
   const handleDeleteUser = async (id: number) => {
@@ -54,27 +80,25 @@ export default function UserManagementPage() {
   const handleOpenUserDialog = (user: User | null = null) => {
     setSelectedUser(user);
     if (user) {
-      setUserFormData({
+      form.reset({
         email: user.email,
-        password: "", // Not updating password unless explicitly set
         fullName: user.fullName,
         dob: user.dob,
         phoneNumber: user.phoneNumber,
-        imageUrl: user.imageUrl || "",
         address: user.address,
         roleName: user.roleName,
+        imageUrl: user.imageUrl || "",
       });
-      setImagePreview(user.imageUrl || "");
+      setImagePreview(user.imageUrl || null);
     } else {
-      setUserFormData({
+      form.reset({
         email: "",
-        password: "",
         fullName: "",
         dob: "",
         phoneNumber: "",
-        imageUrl: "",
         address: "",
         roleName: "CUSTOMER",
+        imageUrl: "",
       });
       setImagePreview(null);
     }
@@ -86,11 +110,6 @@ export default function UserManagementPage() {
     setImagePreview(null);
   };
 
-  const handleUserFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setUserFormData((prev:any) => ({ ...prev, [name]: value }));
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -99,8 +118,8 @@ export default function UserManagementPage() {
     }
   };
 
-  const handleSaveUser = async () => {
-    let imageUrl = userFormData.imageUrl;
+  const onSubmit = async (data: UserFormValues) => {
+    let imageUrl = data.imageUrl || "";
 
     if (imageFile) {
       try {
@@ -113,33 +132,42 @@ export default function UserManagementPage() {
         toast({
           title: "Image upload failed",
           description: error.message,
+          variant: "destructive",
         });
         return;
       }
     }
 
-    if (selectedUser) {
-      await userApi.update(selectedUser.id, {
-        ...userFormData,
-        imageUrl,
-      });
+    try {
+      if (selectedUser) {
+        await userApi.update(selectedUser.id, {
+          ...data,
+          imageUrl,
+        });
+        toast({
+          title: "User updated successfully",
+          description: "The user has been updated successfully",
+        });
+      } else {
+        await userApi.create({
+          ...data,
+          imageUrl,
+        });
+        toast({
+          title: "User created successfully",
+          description: "The user has been created successfully",
+        });
+      }
+
+      handleCloseUserDialog();
+      fetchUsers();
+    } catch (error: any) {
       toast({
-        title: "User updated successfully",
-        description: "The user has been updated successfully",
-      });
-    } else {
-      await userApi.create({
-        ...userFormData,
-        imageUrl,
-      });
-      toast({
-        title: "User created successfully",
-        description: "The user has been created successfully",
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
       });
     }
-
-    handleCloseUserDialog();
-    fetchUsers();
   };
 
   return (
@@ -153,138 +181,183 @@ export default function UserManagementPage() {
         </Button>
       </div>
       
-      {/* Loading skeleton */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="w-full h-60 bg-gray-300 rounded-md" />
-          ))}
-        </div>
-      ) : (
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="w-full bg-gray-100">
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Full Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Email</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Phone Number</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Role</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="border-t border-gray-200 hover:bg-gray-50">
-                <td className="px-6 py-4">{user.fullName}</td>
-                <td className="px-6 py-4">{user.email}</td>
-                <td className="px-6 py-4">{user.phoneNumber}</td>
-                <td className="px-6 py-4">{user.roleName}</td>
-                <td className="px-6 py-4 flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleOpenUserDialog(user)}
-                    className="w-8 h-8"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDeleteUser(user.id)}
-                    className="w-8 h-8"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {[...Array(6)].map((_, i) => (
+      <Skeleton key={i} className="w-full h-60 bg-gray-300 rounded-md" />
+    ))}
+  </div>
+) : (
+  <div className="overflow-x-auto">
+    <table className="min-w-full table-auto border-collapse">
+      <thead className="bg-gray-100">
+        <tr>
+          <th className="border px-4 py-2">Avatar</th>
+          <th className="border px-4 py-2">Full Name</th>
+          <th className="border px-4 py-2">Email</th>
+          <th className="border px-4 py-2">Phone</th>
+          <th className="border px-4 py-2">Role</th>
+          <th className="border px-4 py-2">Address</th>
+          <th className="border px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map((user) => (
+          <tr key={user.id} className="bg-white">
+            <td className="border px-4 py-2 text-center">
+              <Avatar className="w-12 h-12 inline-block">
+                <AvatarImage src={user.imageUrl || undefined} />
+                <AvatarFallback><UserIcon /></AvatarFallback>
+              </Avatar>
+            </td>
+            <td className="border px-4 py-2">{user.fullName}</td>
+            <td className="border px-4 py-2">{user.email}</td>
+            <td className="border px-4 py-2">{user.phoneNumber}</td>
+            <td className="border px-4 py-2">{user.roleName}</td>
+            <td className="border px-4 py-2">{user.address}</td>
+            <td className="border px-4 py-2 flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenUserDialog(user)}
+              >
+                <PencilIcon className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteUser(user.id)}
+              >
+                <TrashIcon className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
 
       <Dialog open={openUserDialog} onOpenChange={setOpenUserDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{selectedUser ? "Update User" : "Create User"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <Input
-              id="fullName"
-              name="fullName"
-              value={userFormData.fullName}
-              onChange={handleUserFormChange}
-              placeholder="Enter full name"
-              className="w-full"
-            />
-            <Input
-              id="email"
-              name="email"
-              value={userFormData.email}
-              onChange={handleUserFormChange}
-              placeholder="Enter email"
-              className="w-full"
-            />
-            {!selectedUser && (
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={userFormData.password}
-                onChange={handleUserFormChange}
-                placeholder="Enter password"
-                className="w-full"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="flex justify-center mb-6">
+                <Avatar className="w-32 h-32">
+                  <AvatarImage src={imagePreview || form.getValues('imageUrl') || undefined} />
+                  <AvatarFallback>{form.getValues('fullName').charAt(0)}</AvatarFallback>
+                </Avatar>
+              </div>
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            )}
-            <Input
-              id="dob"
-              name="dob"
-              type="date"
-              value={userFormData.dob}
-              onChange={handleUserFormChange}
-              className="w-full"
-            />
-            <Input
-              id="phoneNumber"
-              name="phoneNumber"
-              value={userFormData.phoneNumber}
-              onChange={handleUserFormChange}
-              placeholder="Enter phone number"
-              className="w-full"
-            />
-            <Input
-              id="address"
-              name="address"
-              value={userFormData.address}
-              onChange={handleUserFormChange}
-              placeholder="Enter address"
-              className="w-full"
-            />
-            <label>Role</label>
-            <select
-              id="roleName"
-              name="roleName"
-              value={userFormData.roleName}
-              onChange={handleUserFormChange}
-              className="w-full border p-2 rounded"
-            >
-              <option value="ADMIN">ADMIN</option>
-              <option value="STAFF">STAFF</option>
-              <option value="MANAGER">MANAGER</option>
-              <option value="CUSTOMER">CUSTOMER</option>
-            </select>
-            <Input id="imageFile" type="file" onChange={handleImageChange} className="w-full" />
-            {imagePreview && (
-              <img src={imagePreview} alt="Preview" className="mt-4 w-full h-40 object-cover" />
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseUserDialog}>
-              Cancel
-            </Button>
-            <Button variant="default" onClick={handleSaveUser}>
-              {selectedUser ? "Update User" : "Create User"}
-            </Button>
-          </DialogFooter>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {!selectedUser && (
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              <FormField
+                control={form.control}
+                name="dob"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Birth</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="roleName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormItem>
+                <FormLabel>Profile Picture</FormLabel>
+                <FormControl>
+                  <Input id="imageFile" type="file" onChange={handleImageChange} accept="image/*" />
+                </FormControl>
+              </FormItem>
+              <Button type="submit" className="w-full">
+                {selectedUser ? "Update User" : "Create User"}
+              </Button>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

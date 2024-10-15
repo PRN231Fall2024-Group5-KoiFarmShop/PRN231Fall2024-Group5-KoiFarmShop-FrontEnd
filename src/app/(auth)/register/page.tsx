@@ -21,8 +21,6 @@ import authAPI from "@/lib/api/authAPI";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
-interface RegisterFormProps extends React.HTMLAttributes<HTMLDivElement> {}
-
 // Extend schema for confirmPassword validation
 const formRegisterSchema = z.object({
   email: z.string().min(3, {
@@ -46,7 +44,7 @@ const formRegisterSchema = z.object({
   path: ["confirmPassword"], // Field to display the error
 });
 
-export function RegisterForm({ className, ...props }: RegisterFormProps) {
+function RegisterForm() {
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null); // State to hold avatar preview URL
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const form = useForm<z.infer<typeof formRegisterSchema>>({
@@ -111,7 +109,7 @@ export function RegisterForm({ className, ...props }: RegisterFormProps) {
   }
 
   return (
-    <div className={className} {...props}>
+    <div>
       <Form {...form}>
         <form
           method="POST"
@@ -286,7 +284,9 @@ function RegisterSection() {
             </span>
           </div>
 
-          <RegisterForm className="text-neutral-6 w-full" />
+          <div  className="text-neutral-6 w-full">
+            <RegisterForm />
+          </div>
         </div>
       </div>
     </section>

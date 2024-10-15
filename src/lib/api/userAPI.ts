@@ -42,7 +42,7 @@ const userApi = {
     const response = await axiosClient.put<ApiResponse<User>>(`v1/Users/${id}`, data);
     return response.data;
   },
-  updateProfile: async (id: number, data: Omit<UserUpdateProfile, 'id'>): Promise<ApiResponse<User>> => {
+  updateProfile: async (id: number, data: Omit<UserUpdateProfile, 'id'>): Promise<ApiResponse<object>> => {
     const response = await axiosClient.put<ApiResponse<UserUpdateProfile>>(`v1/users/customers/`+id, data);
     return response.data;
   },
