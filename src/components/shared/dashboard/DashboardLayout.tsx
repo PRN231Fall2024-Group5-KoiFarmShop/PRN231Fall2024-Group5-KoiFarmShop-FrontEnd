@@ -1,11 +1,23 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Bell, CircleUser, Package2, SmileIcon } from "lucide-react";
 import Link from "next/link";
 import { DashboardSidebar, MobileSidebar, SidebarItem } from "./DashboardSidebar";
 import NotificationBar from "@/components/notification-bar";
+import { useRouter } from "next/navigation";
 
 export function DashboardLayout({ children, sidebarArray, title = "Welcome home" }: { children: React.ReactNode, sidebarArray: SidebarItem[], title?: string }) {
+  const router = useRouter();
+  const handleLogout = () => {
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("user");
+    router.push("/login");
+  }
+ 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/40 md:block">
@@ -42,11 +54,9 @@ export function DashboardLayout({ children, sidebarArray, title = "Welcome home"
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem
+                    onClick={handleLogout}
+                >Logout</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
             </header>

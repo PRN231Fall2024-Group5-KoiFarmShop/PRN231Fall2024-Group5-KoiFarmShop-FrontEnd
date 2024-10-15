@@ -9,8 +9,14 @@ export const ADMIN_SIDEBAR = [{
     }, {
     "icon": "Settings",
     "name": "System Config",
-    "href": "#"
-}];
+    "href": "#",
+    },{
+        "icon": "Users",
+        "name": "Manage Profile",
+        "href": "/admin/profile"
+    }
+
+];
 
 export const MANAGER_SIDEBAR = [{
     "icon": "Home",
@@ -36,6 +42,11 @@ export const MANAGER_SIDEBAR = [{
     "icon": "Edit",
     "name": "Approve Blogs",
     "href": "#"
+},
+{
+    "icon": "Users",
+    "name": "Manage Profile",
+    "href": "/manager/profile"
 }];
 
 export const STAFF_SIDEBAR = [{
@@ -62,5 +73,10 @@ export const STAFF_SIDEBAR = [{
     "icon": "History",
     "name": "Order History",
     "href": "#"
+},
+{
+    "icon": "Users",
+    "name": "Manage Profile",
+    "href": "/staff/profile"
 }];
 

@@ -17,6 +17,14 @@ export interface User {
   roleName: 'ADMIN' | 'STAFF' | 'MANAGER' | 'CUSTOMER'; // Predefined roles
 }
 
+export interface UserUpdateProfile {
+  fullName: string;
+  dob: string;
+  phoneNumber: string;
+  imageUrl: string | null;
+  address: string;
+}
+
 const userApi = {
   getAll: async (): Promise<ApiResponse<User[]>> => {
     const response = await axiosClient.get<ApiResponse<User[]>>('v1/Users');
@@ -32,6 +40,10 @@ const userApi = {
   },
   update: async (id: number, data: Omit<User, 'id'>): Promise<ApiResponse<User>> => {
     const response = await axiosClient.put<ApiResponse<User>>(`v1/Users/${id}`, data);
+    return response.data;
+  },
+  updateProfile: async (id: number, data: Omit<UserUpdateProfile, 'id'>): Promise<ApiResponse<User>> => {
+    const response = await axiosClient.put<ApiResponse<UserUpdateProfile>>(`v1/users/customers/`+id, data);
     return response.data;
   },
   delete: async (id: number): Promise<ApiResponse<null>> => {

@@ -56,7 +56,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     .then(({data}:any) => {
       console.log("Login successful", data);
       if(data?.status == false){
-        toast("Login failed: " + data?.message,);
+        toast("Login failed: " + data?.message);
         return;
       }
 
@@ -102,7 +102,9 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     })
     .catch((error) => {
       console.error("Login failed", error);
-      toast.error("Login failed: " + error?.message);
+      //read response
+      const {data} = error.response;
+      toast.error("Login failed: " + data?.message);
     });
   }
 
