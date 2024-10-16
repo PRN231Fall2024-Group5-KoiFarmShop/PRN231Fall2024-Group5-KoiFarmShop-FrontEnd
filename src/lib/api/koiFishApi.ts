@@ -1,11 +1,6 @@
 import axios from "axios";
+import axiosClient from "./axiosClient";
 
-const axiosClient = axios.create({
-  baseURL: 'https://koi.eventzone.id.vn/odata',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 interface ApiResponse<T> {
   data: T;
@@ -70,20 +65,20 @@ const koiFishApi = {
   getAll: async (
     params: KoiFishQueryParams,
   ): Promise<ApiResponse<KoiFish[]>> => {
-    const response = await axiosClient.get<ApiResponse<KoiFish[]>>("/KoiFish", {
+    const response = await axiosClient.get<ApiResponse<KoiFish[]>>("/koi-fishes", {
       params,
     });
     return response.data;
   },
   getById: async (id: number): Promise<ApiResponse<KoiFish>> => {
     const response = await axiosClient.get<ApiResponse<KoiFish>>(
-      `/KoiFish/${id}`,
+      `/koi-fishes/${id}`,
     );
     return response.data;
   },
   create: async (data: Omit<KoiFish, "id">): Promise<ApiResponse<KoiFish>> => {
     const response = await axiosClient.post<ApiResponse<KoiFish>>(
-      "/KoiFish",
+      "/koi-fishes",
       data,
     );
     return response.data;
@@ -93,16 +88,58 @@ const koiFishApi = {
     data: Partial<KoiFish>,
   ): Promise<ApiResponse<KoiFish>> => {
     const response = await axiosClient.put<ApiResponse<KoiFish>>(
-      `/KoiFish/${id}`,
+      `/koi-fishes/${id}`,
       data,
     );
     return response.data;
   },
   delete: async (id: number): Promise<ApiResponse<null>> => {
     const response = await axiosClient.delete<ApiResponse<null>>(
-      `/KoiFish/${id}`,
+      `/koi-fishes/${id}`,
     );
     return response.data;
+  },
+
+  // Updated to use axiosClient for fetching certificates
+  getCertificates: async (fishId: number): Promise<ApiResponse<any[]>> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<any[]>>(
+        `/KoiCertificate/getList/${fishId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching certificates:", error);
+      return {
+        isSuccess: false,
+        data: [],
+        message: "Failed to fetch certificates",
+      };
+    }
+  },
+
+  // Updated to use axiosClient for adding certificates
+  addCertificate: async (
+    certificateData: { koiFishId: number; certificateType: string; certificateUrl: string },
+  ): Promise<ApiResponse<any>> => {
+    try {
+      const response = await axiosClient.post<ApiResponse<any>>(
+        "/KoiCertificate",
+        certificateData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error adding certificate:", error);
+      return {
+        isSuccess: false,
+        message: "Failed to add certificate",
+        data: []
+      };
+    }
   },
 };
 

@@ -1,34 +1,96 @@
+'use client'
 
-'use client';
+import React, { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Toaster } from '@/components/ui/toaster'
+import { ReactFbImageGrid } from "@uydev/react-fb-image-grid"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import koiFishApi from '@/lib/api/koiFishApi';
-import { Toaster } from '@/components/ui/toaster';
+// Assuming you have a koiFishApi with these methods
+import koiFishApi from '@/lib/api/koiFishApi'
+import { useToast } from '@/hooks/use-toast'
+
+type Certificate = {
+  id: number
+  koiFishId: number
+  certificateType: string
+  certificateUrl: string
+}
+
+const certificateSchema = z.object({
+  certificateType: z.string().min(1, 'Certificate type is required').max(100, 'Certificate type must be 100 characters or less'),
+  certificateUrl: z.string().url('Invalid URL').min(1, 'Certificate URL is required'),
+})
+
+type CertificateFormValues = z.infer<typeof certificateSchema>
 
 export default function KoiFishDetailsPage() {
-  const router = useRouter();
-  const { fishId } = useParams();
-  const [fishDetails, setFishDetails] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const {toast} = useToast()
+  const router = useRouter()
+  const { fishId } = useParams()
+  const [fishDetails, setFishDetails] = useState<any>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [certificates, setCertificates] = useState<Certificate[]>([])
+
+  const form = useForm<CertificateFormValues>({
+    resolver: zodResolver(certificateSchema),
+    defaultValues: {
+      certificateType: '',
+      certificateUrl: '',
+    },
+  })
 
   useEffect(() => {
-    fetchFishDetails();
-  }, [fishId]);
+    fetchFishDetails()
+    fetchCertificates()
+  }, [fishId])
 
   const fetchFishDetails = async () => {
-    setLoading(true);
-    const response = await koiFishApi.getById(+fishId);
+    setLoading(true)
+    const response = await koiFishApi.getById(+fishId)
     if (response.isSuccess) {
-      setFishDetails(response.data);
+      setFishDetails(response.data)
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
+
+  const fetchCertificates = async () => {
+    const response = await koiFishApi.getCertificates(+fishId)
+    if (response.isSuccess) {
+      setCertificates(response.data)
+    }
+  }
+
+  const handleAddCertificate = async (data: CertificateFormValues) => {
+    const response = await koiFishApi.addCertificate({
+      koiFishId: +fishId,
+      ...data
+    })
+    if (response.isSuccess) {
+      toast({
+        title: "Success",
+        description: "Certificate added successfully",
+      })
+      fetchCertificates()
+      form.reset()
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to add certificate",
+        variant: "destructive",
+      })
+    }
+  }
 
   if (loading) {
-    return <div className="container mx-auto p-4">Loading...</div>;
+    return <div className="container mx-auto p-4">Loading...</div>
   }
 
   return (
@@ -41,8 +103,7 @@ export default function KoiFishDetailsPage() {
         <div className="md:w-1/2">
           <h2 className="text-xl font-bold mb-4">Fish Images</h2>
           {fishDetails?.koiFishImages?.length > 0 ? (
-            // <ReactFbImageGrid images={fishDetails.koiFishImages.map((image: any) => image?.imageUrl)} />
-            <></>
+            <ReactFbImageGrid images={fishDetails.koiFishImages.map((image: any) => image?.imageUrl)} className="w-full aspect-square" />
           ) : (
             <p>No images available for this fish.</p>
           )}
@@ -53,6 +114,7 @@ export default function KoiFishDetailsPage() {
           <Tabs defaultValue="information">
             <TabsList className="mb-4">
               <TabsTrigger value="information">Information</TabsTrigger>
+              <TabsTrigger value="certificate">Certificate</TabsTrigger>
               <TabsTrigger value="others">Others</TabsTrigger>
             </TabsList>
 
@@ -106,6 +168,62 @@ export default function KoiFishDetailsPage() {
               </div>
             </TabsContent>
 
+            {/* Certificate Tab */}
+            <TabsContent value="certificate">
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold">Certificates</h2>
+                {certificates.length > 0 ? (
+                  certificates.map((cert) => (
+                    <Card key={cert.id}>
+                      <CardHeader>
+                        <CardTitle>{cert.certificateType}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <a href={cert.certificateUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                          View Certificate
+                        </a>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p>No certificates available for this fish.</p>
+                )}
+
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleAddCertificate)} className="space-y-4">
+                    <h3 className="text-lg font-semibold">Add New Certificate</h3>
+                    <FormField
+                      control={form.control}
+                      name="certificateType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Certificate Type</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="certificateUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Certificate URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit">Add Certificate</Button>
+                  </form>
+                </Form>
+              </div>
+            </TabsContent>
+
             {/* Others Tab */}
             <TabsContent value="others">
               <div className="text-gray-500">This tab is currently empty.</div>
@@ -120,5 +238,5 @@ export default function KoiFishDetailsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
