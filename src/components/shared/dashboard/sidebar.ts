@@ -1,15 +1,11 @@
 export const ADMIN_SIDEBAR = [{
-    "icon": "Home",
-    "name": "Dashboard - Admin",
-    "href": "#"
-    }, {
     "icon": "Users",
     "name": "Manage Users",
-    "href": "#"
+    "href": "/admin/user-management"
     }, {
     "icon": "Settings",
     "name": "System Config",
-    "href": "#",
+    "href": "/admin/system-config",
     },{
         "icon": "Users",
         "name": "Manage Profile",

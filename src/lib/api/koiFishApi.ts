@@ -1,4 +1,11 @@
-import axiosClient from "./axiosClient";
+import axios from "axios";
+
+const axiosClient = axios.create({
+  baseURL: 'https://koi.eventzone.id.vn/odata',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 interface ApiResponse<T> {
   data: T;

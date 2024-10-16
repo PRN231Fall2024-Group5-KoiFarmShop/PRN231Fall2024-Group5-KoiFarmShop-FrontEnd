@@ -44,6 +44,7 @@
     "@t3-oss/env-nextjs": "^0.10.1",
     "@tanstack/react-query": "^5.54.1",
     "@tanstack/react-table": "^8.20.5",
+    "@uydev/react-fb-image-grid": "^0.4.2",
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

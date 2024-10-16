@@ -7,13 +7,6 @@ import { toast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import koiFishApi, { KoiFish } from "@/lib/api/koiFishApi";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-} from "@/components/ui/table";
 import { PencilIcon, PlusIcon, TrashIcon, EyeIcon } from "lucide-react";
 
 export default function KoiFishManagementPage() {
@@ -29,7 +22,7 @@ export default function KoiFishManagementPage() {
 
   const fetchKoiFishes = async (page: number) => {
     setLoading(true);
-    const response = await koiFishApi.getAll({ pageNumber: page });
+    const response = await koiFishApi.getAll({ pageNumber: page, pageSize: 6 });
     if (response.isSuccess) {
       setKoiFishes(response.data);
       setTotalPages(response.metadata?.totalPages || 1);
@@ -80,79 +73,88 @@ export default function KoiFishManagementPage() {
           ))}
         </div>
       ) : (
-        <div>
-          <Table className="min-w-full table-auto leading-normal">
-            <TableRow className="bg-gray-100 text-left">
-              <TableCell className="p-4">Koi Name</TableCell>
-              <TableCell className="p-4">Origin</TableCell>
-              <TableCell className="p-4">Gender</TableCell>
-              <TableCell className="p-4">Age</TableCell>
-              <TableCell className="p-4">Price</TableCell>
-              <TableCell className="p-4 text-center">Actions</TableCell>
-            </TableRow>
-            <TableBody>
-              {koiFishes.map((fish) => (
-                <TableRow key={fish.id} className="hover:bg-gray-50">
-                  <TableCell className="p-4">{fish.name}</TableCell>
-                  <TableCell className="p-4">{fish.origin}</TableCell>
-                  <TableCell className="p-4">
-                    {fish.gender ? "Male" : "Female"}
-                  </TableCell>
-                  <TableCell className="p-4">{fish.age}</TableCell>
-                  <TableCell className="p-4">{fish.price} VND</TableCell>
-                  <TableCell className="flex justify-center space-x-2 p-4">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleEditFish(fish.id)}
-                      className="h-8 w-8"
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => handleDeleteFish(fish.id)}
-                      className="h-8 w-8"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={() => handleViewDetails(fish.id)}
-                      className="h-8 w-8"
-                    >
-                      <EyeIcon className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between">
-            <Button
-              variant="outline"
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {koiFishes.map((fish) => (
+            <div
+              key={fish.id}
+              className="border rounded-lg shadow-sm p-4 bg-white hover:shadow-md transition-shadow"
             >
-              Previous
-            </Button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              Next
-            </Button>
-          </div>
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-bold">{fish.name}</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleEditFish(fish.id)}
+                    className="h-8 w-8"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDeleteFish(fish.id)}
+                    className="h-8 w-8"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => handleViewDetails(fish.id)}
+                    className="h-8 w-8"
+                  >
+                    <EyeIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="mb-4 w-full aspect-video">
+               {
+                  fish.koiFishImages.length > 0 ? (
+                    <img
+                    src={fish.koiFishImages[0].imageUrl}
+                    alt={fish.name}
+                    className="w-full  h-full object-cover rounded-md" />
+                  ) : (
+                    <div className="flex items-center justify-center w-full  h-full bg-gray-300 rounded dark:bg-gray-700">
+                        <svg className="w-10 h-10 text-gray-200 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
+                            <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z"/>
+                        </svg>
+                    </div>
+                  )
+               }
+              </div>
+              <div>
+                <p><strong>Origin:</strong> {fish.origin}</p>
+                <p><strong>Gender:</strong> {fish.gender}</p>
+                <p><strong>Age:</strong> {fish.age} years</p>
+                <p><strong>Price:</strong> {fish.price || "N/A"} VND</p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <div className="mt-4 flex items-center justify-between">
+        <Button
+          variant="outline"
+          disabled={currentPage === 1}
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          Previous
+        </Button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 }

@@ -113,6 +113,7 @@ const ProfileForm: React.FC = () => {
   };
 
   return (
+    <>
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle>Update Profile</CardTitle>
@@ -138,7 +139,7 @@ const ProfileForm: React.FC = () => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+              />
             <FormField
               control={form.control}
               name="dob"
@@ -151,7 +152,7 @@ const ProfileForm: React.FC = () => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+              />
             <FormField
               control={form.control}
               name="phoneNumber"
@@ -164,7 +165,7 @@ const ProfileForm: React.FC = () => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+              />
             <FormField
               control={form.control}
               name="address"
@@ -177,7 +178,7 @@ const ProfileForm: React.FC = () => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+              />
             <FormItem>
               <FormLabel>Profile Picture</FormLabel>
               <FormControl>
@@ -189,6 +190,7 @@ const ProfileForm: React.FC = () => {
         </Form>
       </CardContent>
     </Card>
+              </>
   );
 };
 

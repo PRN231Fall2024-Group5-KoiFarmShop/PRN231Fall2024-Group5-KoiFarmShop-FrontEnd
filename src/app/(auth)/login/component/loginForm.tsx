@@ -85,7 +85,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         // }
 
         if(data.roleName === "ADMIN") {
-          router.push("/admin");
+          router.push("/admin/user-management");
         } else if(data.roleName === "MANAGER") {
           router.push("/manager");
         } else if(data.roleName === "STAFF") {
