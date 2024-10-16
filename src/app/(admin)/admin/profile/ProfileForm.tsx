@@ -18,6 +18,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import userApi, { UserUpdateProfile } from '@/lib/api/userAPI';
+import authAPI from '@/lib/api/authAPI';
+import { uploadImage } from '@/lib/configs/firebase';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
@@ -37,6 +39,20 @@ const ProfileForm: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
+  const fetchCurrentUser = async () => {
+    authAPI.getCurrentUser()
+      .then(({data}:any) => {
+        console.log("Current user", data);
+        localStorage.setItem("user", JSON.stringify(data));
+      })
+      .catch((error) => {
+        console.error("Failed to get current user", error);
+      });
+  }
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [])
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -55,7 +71,7 @@ const ProfileForm: React.FC = () => {
       const user = JSON.parse(storedUser);
       form.reset({
         fullName: user.fullName,
-        dob: user.dob,
+        dob: new Date(user.dob).toISOString().split('T')[0],
         phoneNumber: user.phoneNumber,
         address: user.address,
         imageUrl: user.imageUrl || null,
@@ -81,8 +97,8 @@ const ProfileForm: React.FC = () => {
         });
         // Implement image upload logic here
         // For example:
-        // const imageUrl = await uploadImage(imageFile);
-        // data.imageUrl = imageUrl;
+        const imageUrl = await uploadImage(imageFile);
+        data.imageUrl = imageUrl;
       }
 
       const userId = JSON.parse(localStorage.getItem('user') || '{}').id;

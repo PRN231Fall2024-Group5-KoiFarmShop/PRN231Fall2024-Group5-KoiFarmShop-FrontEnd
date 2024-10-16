@@ -86,7 +86,7 @@ export default function UserManagementPage() {
       form.reset({
         email: user.email,
         fullName: user.fullName,
-        dob: user.dob,
+        dob: new Date(user.dob).toISOString().split('T')[0],
         phoneNumber: user.phoneNumber,
         address: user.address,
         roleName: user.roleName,
@@ -195,7 +195,7 @@ export default function UserManagementPage() {
       <Toaster />
       <div className="flex items-center justify-between w-full gap-2 mb-6">
         <h2 className="text-2xl font-bold flex-1">Users</h2>
-        <Button variant="default" onClick={() => handleOpenUserDialog(null)}>
+        <Button onClick={() => handleOpenUserDialog(null)}>
           <PlusIcon className="w-4 h-4 mr-2" />
           <span>Create User</span>
         </Button>
@@ -385,7 +385,7 @@ export default function UserManagementPage() {
                         <SelectContent>
                           <SelectItem value="CUSTOMER">Customer</SelectItem>
                           <SelectItem value="STAFF">Staff</SelectItem>
-                          <SelectItem value="MANAGER">Manager</SelectItem>
+                          {/* <SelectItem value="MANAGER">Manager</SelectItem> */}
                         </SelectContent>
                       </Select>
                       <FormMessage />

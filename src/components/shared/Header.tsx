@@ -218,7 +218,9 @@ const Header = () => {
                     <DropdownMenuContent align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => router.push("/profile")}
+                    >Profile</DropdownMenuItem>
                     <DropdownMenuItem>Your Fish</DropdownMenuItem>
                     <DropdownMenuItem>Your Consignment</DropdownMenuItem>
                     <DropdownMenuItem>Orders</DropdownMenuItem>

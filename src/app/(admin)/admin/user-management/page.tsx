@@ -65,7 +65,7 @@ export default function UserManagementPage() {
     const response = await userApi.getAll();
     if (response.isSuccess) {
       //filter admin
-      response.data = response.data.filter(user => user.roleName == 'STAFF' && user.isDeleted !== true)
+      response.data = response.data.filter(user => user.roleName != 'ADMIN' && user.isDeleted !== true)
       setUsers(response.data);
     }
     setLoading(false);
@@ -86,7 +86,7 @@ export default function UserManagementPage() {
       form.reset({
         email: user.email,
         fullName: user.fullName,
-        dob: user.dob,
+        dob: new Date(user.dob).toISOString().split('T')[0],
         phoneNumber: user.phoneNumber,
         address: user.address,
         roleName: user.roleName,

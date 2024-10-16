@@ -201,6 +201,9 @@ export default function CreateKoiFishPage() {
                       value={
                         +field.value
                       }
+                      onChange={(e) => 
+                        +e.target.value
+                      }
                     />
                   </FormControl>
                   <FormMessage />
