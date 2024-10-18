@@ -275,11 +275,10 @@ export default function CartPage() {
             <div className="flex flex-col space-y-4">
               {/* Header */}
               <div className="hidden text-sm font-semibold md:flex">
-                <div className="w-2/5 pr-2">Product</div>
+                <div className="w-2/5 flex-1 pr-2">Product</div>
                 <div className="w-1/6 text-right">Price</div>
-                {/* <div className="w-1/6 text-center">Quantity</div> */}
                 <div className="w-1/6 text-right">Subtotal</div>
-                <div className="w-1/6 text-center">Consign</div>
+                {/* <div className="w-1/6 text-center">Consign</div> */}
                 <div className="w-1/12"></div>
               </div>
 
@@ -296,7 +295,7 @@ export default function CartPage() {
                   }`}
                 >
                   <div className="flex flex-col items-center border-b p-4 md:flex-row">
-                    <div className="mb-2 flex w-full items-center pr-2 md:mb-0 md:w-2/5">
+                    <div className="mb-2 flex w-full flex-1 items-center pr-2 md:mb-0 md:w-2/5">
                       <Image
                         src={
                           item.koiFishImages[0]?.imageUrl ??
@@ -312,29 +311,15 @@ export default function CartPage() {
                     <div className="mb-2 w-full text-right md:mb-0 md:w-1/6">
                       {formatPriceVND(item.price)}
                     </div>
-                    {/* <div className="mb-2 flex w-full justify-center md:mb-0 md:w-1/6">
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleUpdateQuantity(
-                            item.id,
-                            parseInt(e.target.value),
-                          )
-                        }
-                        className="w-16 text-center"
-                      />
-                    </div> */}
                     <div className="mb-2 w-full text-right md:mb-0 md:w-1/6">
                       {formatPriceVND(item.price * item.quantity)}
                     </div>
-                    <div className="mb-2 flex w-full justify-center md:mb-0 md:w-1/6">
+                    {/* <div className="mb-2 flex w-full justify-center md:mb-0 md:w-1/6">
                       <Checkbox
                         checked={item.consign}
                         onCheckedChange={() => handleConsignToggle(item.id)}
                       />
-                    </div>
+                    </div> */}
                     <div className="flex w-full items-center justify-center md:w-1/12">
                       <Button
                         variant="ghost"
