@@ -65,7 +65,7 @@ const Header = () => {
   useEffect(() => {
     const updateCartCount = () => {
       const cart = getCart();
-      setCartItemCount(cart.reduce((total, item) => total + item.quantity, 0));
+      setCartItemCount(cart.length);
     };
 
     updateCartCount();
@@ -215,7 +215,11 @@ const Header = () => {
                       className="ml-2 rounded-full"
                     >
                       {user?.imageUrl ? (
-                        <img src={user?.imageUrl} className="rounded-full" />
+                        <img
+                          src={user?.imageUrl}
+                          alt="User Avatar"
+                          className="rounded-full"
+                        />
                       ) : (
                         <CircleUser className="h-5 w-5" />
                       )}

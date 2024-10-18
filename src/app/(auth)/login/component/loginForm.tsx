@@ -49,66 +49,67 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formLoginSchema>) {
-    await authAPI.login({
-      email: values.email,
-      password: values.password,
-    })
-    .then(({data}:any) => {
-      console.log("Login successful", data);
-      if(data?.status == false){
-        toast("Login failed: " + data?.message);
-        return;
-      }
-
-      localStorage.setItem("jwt", data.jwt);
-      localStorage.setItem("refreshToken", data.jwtRefreshToken);
-      localStorage.setItem("userId", data.userId);
-      toast("Login successful");
-
-      authAPI.getCurrentUser()
-      .then(({data}:any) => {
-        console.log("Current user", data);
-        localStorage.setItem("user", JSON.stringify(data));
-        // {
-        //   id: 1,
-        //   email: 'admin@gmail.com',
-        //   fullName: 'Admin',
-        //   unsignFullName: 'Admin',
-        //   dob: '2024-09-10T00:00:00',
-        //   phoneNumber: '0123456789',
-        //   roleName: 'ADMIN',
-        //   imageUrl: '',
-        //   address: 'Manager Street, City',
-        //   isActive: null,
-        //   loyaltyPoints: 0,
-        //   isDeleted: false
-        // }
-
-        if(data.roleName === "ADMIN") {
-          router.push("/admin/user-management");
-        } else if(data.roleName === "MANAGER") {
-          router.push("/manager");
-        } else if(data.roleName === "STAFF") {
-          router.push("/staff");
-        } else {
-          router.push("/");
+    await authAPI
+      .login({
+        email: values.email,
+        password: values.password,
+      })
+      .then(({ data }: any) => {
+        console.log("Login successful", data);
+        if (data?.status == false) {
+          toast("Login failed: " + data?.message);
+          return;
         }
 
+        localStorage.setItem("jwt", data.jwt);
+        localStorage.setItem("refreshToken", data.jwtRefreshToken);
+        localStorage.setItem("userId", data.userId);
+        toast("Login successful");
+
+        authAPI
+          .getCurrentUser()
+          .then(({ data }: any) => {
+            console.log("Current user", data);
+            localStorage.setItem("user", JSON.stringify(data));
+            // {
+            //   id: 1,
+            //   email: 'admin@gmail.com',
+            //   fullName: 'Admin',
+            //   unsignFullName: 'Admin',
+            //   dob: '2024-09-10T00:00:00',
+            //   phoneNumber: '0123456789',
+            //   roleName: 'ADMIN',
+            //   imageUrl: '',
+            //   address: 'Manager Street, City',
+            //   isActive: null,
+            //   loyaltyPoints: 0,
+            //   isDeleted: false
+            // }
+
+            if (data.roleName === "ADMIN") {
+              router.push("/admin/user-management");
+            } else if (data.roleName === "MANAGER") {
+              router.push("/manager");
+            } else if (data.roleName === "STAFF") {
+              router.push("/staff");
+            } else {
+              router.push("/");
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to get current user", error);
+          });
       })
       .catch((error) => {
-        console.error("Failed to get current user", error);
+        console.error("Login failed", error);
+        //read response
+        const { data } = error.response;
+        toast.error("Login failed: " + data?.message);
       });
-      
-    })
-    .catch((error) => {
-      console.error("Login failed", error);
-      //read response
-      const {data} = error.response;
-      toast.error("Login failed: " + data?.message);
-    });
   }
 
-  const isLoading = status === "pending";
+  // const isLoading = status === "pending";
+  const isLoading = false;
 
   return (
     <div className={cn("grid gap-4 space-y-4", className)} {...props}>
@@ -181,8 +182,8 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         </form>
       </Form>
       <div className="flex items-center justify-between gap-4">
-        <span className="h-[2px] w-full bg-neutral-4"></span>OR
-        <span className="h-[2px] w-full bg-neutral-4"></span>
+        <span className="bg-neutral-4 h-[2px] w-full"></span>OR
+        <span className="bg-neutral-4 h-[2px] w-full"></span>
       </div>
       <div className="flex flex-col gap-4">
         <Button

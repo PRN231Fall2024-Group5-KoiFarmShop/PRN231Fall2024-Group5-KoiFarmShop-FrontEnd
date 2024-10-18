@@ -37,17 +37,21 @@ const authAPI = {
     email: string;
     password: string;
   }): Promise<ApiResponse<LoginResponse>> => {
-    const response = await axiosClient.post<ApiResponse<LoginResponse>>('v1/users/login', {
-      email,
-      password,
-    });
+    const response = await axiosClient.post<ApiResponse<LoginResponse>>(
+      "/users/login",
+      {
+        email,
+        password,
+      },
+    );
     return response.data;
   },
 
   getCurrentUser: async (): Promise<ApiResponse<RegisterResponse>> => {
     try {
-    const response = await axiosClient.get<ApiResponse<RegisterResponse>>('v1/users/me');
-    return response.data;
+      const response =
+        await axiosClient.get<ApiResponse<RegisterResponse>>("/users/me");
+      return response.data;
     } catch (error) {
       throw error;
     }
@@ -71,16 +75,19 @@ const authAPI = {
     address: string;
     roleName: string;
   }): Promise<ApiResponse<RegisterResponse>> => {
-    const response = await axiosClient.post<ApiResponse<RegisterResponse>>('v1/users/register', {
-      email,
-      password,
-      fullName,
-      dob,
-      phoneNumber,
-      imageUrl,
-      address,
-      roleName,
-    });
+    const response = await axiosClient.post<ApiResponse<RegisterResponse>>(
+      "/users/register",
+      {
+        email,
+        password,
+        fullName,
+        dob,
+        phoneNumber,
+        imageUrl,
+        address,
+        roleName,
+      },
+    );
     return response.data;
   },
 };

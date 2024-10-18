@@ -18,6 +18,7 @@ export interface KoiFish {
   name: string;
   origin: string;
   gender: string;
+  dob?: string;
   age: number;
   length: number;
   weight: number;
@@ -142,6 +143,32 @@ const koiFishApi = {
         isSuccess: false,
         message: "Failed to add certificate",
         data: [],
+      };
+    }
+  },
+
+  // Add this new function to your koiFishApi object
+  getMultipleKoiDetails: async (
+    ids: number[],
+  ): Promise<ApiResponse<KoiFish[]>> => {
+    if (ids.length === 0) {
+      return { isSuccess: false, data: [], message: "No IDs provided" };
+    }
+    if (ids.length > 100) {
+      // Adjust this limit based on API constraints
+      return { isSuccess: false, data: [], message: "Too many IDs requested" };
+    }
+    const idsString = ids.join(",");
+    const query = `/odata/koi-fishes?$filter=id in (${idsString})`;
+    try {
+      const response = await axiosClient.get<{ value: KoiFish[] }>(query);
+      return { isSuccess: true, data: response.data.value, message: "Success" };
+    } catch (error) {
+      console.error("Error fetching multiple koi details:", error);
+      return {
+        isSuccess: false,
+        data: [],
+        message: "Failed to fetch koi details",
       };
     }
   },
