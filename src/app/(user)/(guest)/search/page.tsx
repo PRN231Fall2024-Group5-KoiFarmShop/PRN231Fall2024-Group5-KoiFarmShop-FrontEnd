@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import SearchPage from "./SearchPage";
 
-const SearchPage = () => {
+const SearchPageWrapper = () => {
   return (
     <Suspense>
       <SearchPage />
@@ -8,4 +9,4 @@ const SearchPage = () => {
   );
 };
 
-export default SearchPage;
+export default SearchPageWrapper;

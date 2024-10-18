@@ -1,7 +1,6 @@
 import axios from "axios";
 import axiosClient from "./axiosClient";
 
-
 interface ApiResponse<T> {
   data: T;
   message: string;
@@ -65,9 +64,12 @@ const koiFishApi = {
   getAll: async (
     params: KoiFishQueryParams,
   ): Promise<ApiResponse<KoiFish[]>> => {
-    const response = await axiosClient.get<ApiResponse<KoiFish[]>>("/koi-fishes", {
-      params,
-    });
+    const response = await axiosClient.get<ApiResponse<KoiFish[]>>(
+      "/koi-fishes",
+      {
+        params,
+      },
+    );
     return response.data;
   },
   getById: async (id: number): Promise<ApiResponse<KoiFish>> => {
@@ -104,7 +106,7 @@ const koiFishApi = {
   getCertificates: async (fishId: number): Promise<ApiResponse<any[]>> => {
     try {
       const response = await axiosClient.get<ApiResponse<any[]>>(
-        `/KoiCertificate/getList/${fishId}`
+        `/KoiCertificate/getList/${fishId}`,
       );
       return response.data;
     } catch (error) {
@@ -118,9 +120,11 @@ const koiFishApi = {
   },
 
   // Updated to use axiosClient for adding certificates
-  addCertificate: async (
-    certificateData: { koiFishId: number; certificateType: string; certificateUrl: string },
-  ): Promise<ApiResponse<any>> => {
+  addCertificate: async (certificateData: {
+    koiFishId: number;
+    certificateType: string;
+    certificateUrl: string;
+  }): Promise<ApiResponse<any>> => {
     try {
       const response = await axiosClient.post<ApiResponse<any>>(
         "/KoiCertificate",
@@ -129,7 +133,7 @@ const koiFishApi = {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -137,7 +141,7 @@ const koiFishApi = {
       return {
         isSuccess: false,
         message: "Failed to add certificate",
-        data: []
+        data: [],
       };
     }
   },

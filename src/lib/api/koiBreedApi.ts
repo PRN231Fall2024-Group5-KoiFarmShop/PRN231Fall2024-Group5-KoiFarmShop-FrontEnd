@@ -17,12 +17,12 @@ export interface KoiBreed {
 const koiBreedApi = {
   getAll: async (): Promise<ApiResponse<KoiBreed[]>> => {
     const response =
-      await axiosClient.get<ApiResponse<KoiBreed[]>>("/KoiBreed");
+      await axiosClient.get<ApiResponse<KoiBreed[]>>("/koi-breeds");
     return response.data;
   },
   getById: async (id: number): Promise<ApiResponse<KoiBreed>> => {
     const response = await axiosClient.get<ApiResponse<KoiBreed>>(
-      `/KoiBreed/${id}`,
+      `/koi-breeds/${id}`,
     );
     return response.data;
   },
@@ -30,7 +30,7 @@ const koiBreedApi = {
     data: Omit<KoiBreed, "id" | "isDeleted">,
   ): Promise<ApiResponse<KoiBreed>> => {
     const response = await axiosClient.post<ApiResponse<KoiBreed>>(
-      "/KoiBreed",
+      "/koi-breeds",
       data,
     );
     return response.data;
@@ -40,21 +40,21 @@ const koiBreedApi = {
     data: Omit<KoiBreed, "id" | "isDeleted">,
   ): Promise<ApiResponse<KoiBreed>> => {
     const response = await axiosClient.put<ApiResponse<KoiBreed>>(
-      `/KoiBreed/${id}`,
+      `/koi-breeds/${id}`,
       data,
     );
     return response.data;
   },
   delete: async (id: number): Promise<ApiResponse<null>> => {
     const response = await axiosClient.delete<ApiResponse<null>>(
-      `/KoiBreed/${id}`,
+      `/koi-breeds/${id}`,
     );
     return response.data;
   },
   getList: async (searchTerm?: string): Promise<ApiResponse<KoiBreed[]>> => {
     const params = searchTerm ? { SearchTerm: searchTerm } : {};
     const response = await axiosClient.get<ApiResponse<KoiBreed[]>>(
-      "/KoiBreed",
+      "/koi-breeds",
       { params },
     );
     return response.data;
