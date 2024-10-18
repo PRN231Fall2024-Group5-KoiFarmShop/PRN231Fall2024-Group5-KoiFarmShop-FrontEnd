@@ -21,7 +21,7 @@ import PolicyGuide from "./components/PolicyGuide";
 
 import { addToCart } from "@/lib/cart";
 import { useToast } from "@/hooks/use-toast";
-import { formatPriceVND } from "@/lib/utils";
+import { formatPriceVND, formatDate } from "@/lib/utils";
 
 const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
   const { koiId } = params;
@@ -59,7 +59,7 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
     return <div>Error: {error || "Koi details not found"}</div>;
   }
 
-  const breed = koiDetails.koiBreeds[0]?.name || "Unknown Breed";
+  const breeds = koiDetails.koiBreeds.map((breed) => breed.name).join(", ");
 
   const handleAddToCart = () => {
     if (koiDetails) {
@@ -87,7 +87,7 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
               </BreadcrumbItem>
               <BreadcrumbItem className="text-primary">
                 <BreadcrumbLink href={`/breed/${koiDetails.koiBreeds[0]?.id}`}>
-                  {breed}
+                  {breeds}
                 </BreadcrumbLink>
                 <BreadcrumbSeparator />
               </BreadcrumbItem>
@@ -167,7 +167,11 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
                 <strong>Weight:</strong> {koiDetails.weight} g
               </p>
               <p>
-                <strong>Breed:</strong> {breed}
+                <strong>Breed(s):</strong> {breeds}
+              </p>
+              <p>
+                <strong>Date of Birth:</strong>
+                {koiDetails.dob ? formatDate(koiDetails.dob) : "N/A"}
               </p>
             </div>
             <Button
@@ -183,12 +187,12 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
         {/* Tabbed section */}
         <div className="mb-6 mt-12">
           <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="description">
                 Detailed Description
               </TabsTrigger>
               <TabsTrigger value="breed">Fish Breed</TabsTrigger>
-              {/* <TabsTrigger value="feedback">Feedback</TabsTrigger> */}
+              <TabsTrigger value="certificates">Certificates</TabsTrigger>
               <TabsTrigger value="policy">Policy</TabsTrigger>
               <TabsTrigger value="purchaseGuide">Purchase Guide</TabsTrigger>
             </TabsList>
@@ -204,9 +208,52 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
             <TabsContent value="breed" className="mt-4">
               <div className="min-h-[300px] rounded-lg bg-[#F9F5EC] p-6">
                 <h3 className="mb-4 text-xl font-semibold">
-                  About {koiDetails.koiBreeds[0]?.name} Koi
+                  About {breeds} Koi
                 </h3>
-                <p>{koiDetails.koiBreeds[0]?.content}</p>
+                {koiDetails.koiBreeds.map((breed, index) => (
+                  <div key={breed.id} className={index > 0 ? "mt-4" : ""}>
+                    <h4 className="mb-2 text-lg font-semibold">{breed.name}</h4>
+                    <p>{breed.content}</p>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            <TabsContent value="certificates" className="mt-4">
+              <div className="min-h-[300px] rounded-lg bg-[#F9F5EC] p-6">
+                <h3 className="mb-4 text-xl font-semibold">Koi Certificates</h3>
+                {koiDetails.koiCertificates.length > 0 ? (
+                  <div className="flex flex-row flex-wrap gap-4">
+                    {koiDetails.koiCertificates.map((cert) => (
+                      <div
+                        key={cert.id}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <p className="text-center font-semibold">
+                          {cert.certificateType}
+                        </p>
+                        <div className="relative h-[300px] w-[300px] overflow-hidden rounded-lg">
+                          <Image
+                            src={cert.certificateUrl}
+                            alt={`${cert.certificateType} Certificate`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            style={{ objectFit: "contain" }}
+                          />
+                        </div>
+                        <a
+                          href={cert.certificateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          View Full Certificate
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No certificates available for this koi.</p>
+                )}
               </div>
             </TabsContent>
             <TabsContent value="policy" className="mt-4">

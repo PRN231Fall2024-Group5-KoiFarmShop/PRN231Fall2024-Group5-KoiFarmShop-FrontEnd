@@ -1,40 +1,65 @@
-import { KoiFish } from "./api/koiFishApi";
+import { DateRange } from "react-day-picker";
+import { KoiFish } from "@/lib/api/koiFishApi";
 
-export interface CartItem extends KoiFish {
-  quantity: number;
+export interface CartItem {
+  id: number;
+  price: number;
+  name: string;
+  koiFishImages: { imageUrl: string }[];
+  consign: boolean;
+  consignmentConfig?: {
+    dietId: number;
+    dateRange: DateRange | undefined;
+  };
 }
 
-export function addToCart(koi: KoiFish) {
-  const cart = getCart();
-  const existingItem = cart.find((item) => item.id === koi.id);
+const CART_STORAGE_KEY = "cart";
 
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({ ...koi, quantity: 1 });
+export const getCart = (): CartItem[] => {
+  if (typeof window === "undefined") {
+    return [];
   }
-
-  localStorage.setItem("cart", JSON.stringify(cart));
-  window.dispatchEvent(new Event("storage"));
-}
-
-export function getCart(): CartItem[] {
-  const cartJson = localStorage.getItem("cart");
+  const cartJson = localStorage.getItem(CART_STORAGE_KEY);
   return cartJson ? JSON.parse(cartJson) : [];
-}
+};
 
-export function removeFromCart(koiId: number) {
-  const cart = getCart().filter((item) => item.id !== koiId);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  window.dispatchEvent(new Event("storage"));
-}
+export const saveCart = (cart: CartItem[]) => {
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+};
 
-export function updateCartItemQuantity(koiId: number, quantity: number) {
+export const addToCart = (koiFish: KoiFish) => {
   const cart = getCart();
-  const item = cart.find((item) => item.id === koiId);
-  if (item) {
-    item.quantity = quantity;
-    localStorage.setItem("cart", JSON.stringify(cart));
-    window.dispatchEvent(new Event("storage"));
+  const existingItem = cart.find((cartItem) => cartItem.id === koiFish.id);
+
+  if (!existingItem) {
+    const cartItem: CartItem = {
+      id: koiFish.id,
+      price: koiFish.price,
+      name: koiFish.name,
+      koiFishImages: koiFish.koiFishImages,
+      consign: false,
+    };
+    cart.push(cartItem);
+    saveCart(cart);
   }
-}
+};
+
+export const removeFromCart = (koiId: number) => {
+  const cart = getCart().filter((item) => item.id !== koiId);
+  saveCart(cart);
+};
+
+export const updateCartItemConsignment = (
+  koiId: number,
+  consign: boolean,
+  consignmentConfig?: CartItem["consignmentConfig"],
+) => {
+  const cart = getCart().map((item) =>
+    item.id === koiId ? { ...item, consign, consignmentConfig } : item,
+  );
+  saveCart(cart);
+};
+
+export const clearCart = () => {
+  localStorage.removeItem(CART_STORAGE_KEY);
+};
