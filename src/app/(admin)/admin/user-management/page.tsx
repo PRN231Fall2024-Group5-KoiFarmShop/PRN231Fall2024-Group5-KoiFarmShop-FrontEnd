@@ -65,20 +65,37 @@ export default function UserManagementPage() {
     const response = await userApi.getAll();
     if (response.isSuccess) {
       //filter admin
-      response.data = response.data.filter(user => user.roleName != 'ADMIN' && user.isDeleted !== true)
+      response.data = response.data.filter(user => user.roleName != 'ADMIN')
       setUsers(response.data);
     }
     setLoading(false);
   };
 
-  const handleDeleteUser = async (id: number) => {
-    await userApi.delete(id);
-    toast({
-      title: "User deleted successfully",
-      description: "The user has been deleted successfully",
-    });
-    fetchUsers();
+  const handleActiveAndUnactiveUser = async (id: number, isActive: boolean) => {
+    try {
+      const userToUpdate = users.find((user) => user.id === id);
+      if (!userToUpdate) return;
+  
+      await userApi.update(id, {
+        ...userToUpdate,
+        isActive: !isActive, // Toggle the isActive status
+      });
+  
+      toast({
+        title: `User ${isActive ? 'deactivated' : 'activated'} successfully`,
+        description: `The user has been ${isActive ? 'deactivated' : 'activated'} successfully`,
+      });
+  
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
+  
 
   const handleOpenUserDialog = (user: User | null = null) => {
     setSelectedUser(user);
@@ -233,6 +250,7 @@ export default function UserManagementPage() {
           <th className="border px-4 py-2">Phone</th>
           <th className="border px-4 py-2">Role</th>
           <th className="border px-4 py-2">Address</th>
+          <th className="border px-4 py-2">Is Active</th>
           <th className="border px-4 py-2">Actions</th>
         </tr>
       </thead>
@@ -250,6 +268,13 @@ export default function UserManagementPage() {
             <td className="border px-4 py-2">{user.phoneNumber}</td>
             <td className="border px-4 py-2">{user.roleName}</td>
             <td className="border px-4 py-2">{user.address}</td>
+            <td className="border px-4 py-2">{
+              user.isActive ? (
+                <span className=" text-green-500">Yes</span>
+              ) : (
+                <span className="text-red-500">No</span>
+              )
+            }</td>
             <td className="border px-4 py-2 flex justify-end space-x-2">
               <Button
                 variant="outline"
@@ -260,14 +285,18 @@ export default function UserManagementPage() {
                 Edit
               </Button>
               <Button
-                variant="destructive"
                 size="sm"
-                onClick={() => handleDeleteUser(user.id)}
+                onClick={() => handleActiveAndUnactiveUser(user.id, user.isActive || false)}
+                className={
+                  user.isActive
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-green-500 hover:bg-green-600"
+                }
               >
-                <TrashIcon className="w-4 h-4 mr-2" />
-                Delete
+                {user.isActive ? "Deactivate" : "Activate"}
               </Button>
             </td>
+
           </tr>
         ))}
       </tbody>

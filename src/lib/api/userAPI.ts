@@ -15,6 +15,7 @@ export interface User {
   imageUrl: string | null;
   address: string;
   roleName: 'ADMIN' | 'STAFF' | 'MANAGER' | 'CUSTOMER'; // Predefined roles
+  isActive?: boolean;
   isDeleted?: boolean;
 }
 

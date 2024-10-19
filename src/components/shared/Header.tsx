@@ -221,6 +221,9 @@ const Header = () => {
                     <DropdownMenuItem
                       onClick={() => router.push("/profile")}
                     >Profile</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => router.push("/profile/wallet")}
+                    >Wallet</DropdownMenuItem>
                     <DropdownMenuItem>Your Fish</DropdownMenuItem>
                     <DropdownMenuItem>Your Consignment</DropdownMenuItem>
                     <DropdownMenuItem>Orders</DropdownMenuItem>
