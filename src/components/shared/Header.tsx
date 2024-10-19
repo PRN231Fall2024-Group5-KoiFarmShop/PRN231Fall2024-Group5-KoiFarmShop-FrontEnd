@@ -232,9 +232,23 @@ const Header = () => {
                     <DropdownMenuItem onClick={() => router.push("/profile")}>
                       Profile
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => router.push("/profile/order-history")}
+                    >
+                      Orders
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        router.push("/profile/transaction-history")
+                      }
+                    >
+                      Transactions
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      Wallet
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Your Fish</DropdownMenuItem>
                     <DropdownMenuItem>Your Consignment</DropdownMenuItem>
-                    <DropdownMenuItem>Orders</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       Logout
