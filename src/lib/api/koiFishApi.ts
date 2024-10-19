@@ -1,7 +1,6 @@
 import axios from "axios";
 import axiosClient from "./axiosClient";
 
-
 interface ApiResponse<T> {
   data: T;
   message: string;
@@ -19,6 +18,7 @@ export interface KoiFish {
   name: string;
   origin: string;
   gender: string;
+  dob?: string;
   age: number;
   length: number;
   weight: number;
@@ -65,9 +65,12 @@ const koiFishApi = {
   getAll: async (
     params: KoiFishQueryParams,
   ): Promise<ApiResponse<KoiFish[]>> => {
-    const response = await axiosClient.get<ApiResponse<KoiFish[]>>("/koi-fishes", {
-      params,
-    });
+    const response = await axiosClient.get<ApiResponse<KoiFish[]>>(
+      "/koi-fishes",
+      {
+        params,
+      },
+    );
     return response.data;
   },
   getById: async (id: number): Promise<ApiResponse<KoiFish>> => {
@@ -104,7 +107,7 @@ const koiFishApi = {
   getCertificates: async (fishId: number): Promise<ApiResponse<any[]>> => {
     try {
       const response = await axiosClient.get<ApiResponse<any[]>>(
-        `/KoiCertificate/getList/${fishId}`
+        `/KoiCertificate/getList/${fishId}`,
       );
       return response.data;
     } catch (error) {
@@ -118,9 +121,11 @@ const koiFishApi = {
   },
 
   // Updated to use axiosClient for adding certificates
-  addCertificate: async (
-    certificateData: { koiFishId: number; certificateType: string; certificateUrl: string },
-  ): Promise<ApiResponse<any>> => {
+  addCertificate: async (certificateData: {
+    koiFishId: number;
+    certificateType: string;
+    certificateUrl: string;
+  }): Promise<ApiResponse<any>> => {
     try {
       const response = await axiosClient.post<ApiResponse<any>>(
         "/KoiCertificate",
@@ -129,7 +134,7 @@ const koiFishApi = {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -137,7 +142,33 @@ const koiFishApi = {
       return {
         isSuccess: false,
         message: "Failed to add certificate",
-        data: []
+        data: [],
+      };
+    }
+  },
+
+  // Add this new function to your koiFishApi object
+  getMultipleKoiDetails: async (
+    ids: number[],
+  ): Promise<ApiResponse<KoiFish[]>> => {
+    if (ids.length === 0) {
+      return { isSuccess: false, data: [], message: "No IDs provided" };
+    }
+    if (ids.length > 100) {
+      // Adjust this limit based on API constraints
+      return { isSuccess: false, data: [], message: "Too many IDs requested" };
+    }
+    const idsString = ids.join(",");
+    const query = `/odata/koi-fishes?$filter=id in (${idsString})`;
+    try {
+      const response = await axiosClient.get<{ value: KoiFish[] }>(query);
+      return { isSuccess: true, data: response.data.value, message: "Success" };
+    } catch (error) {
+      console.error("Error fetching multiple koi details:", error);
+      return {
+        isSuccess: false,
+        data: [],
+        message: "Failed to fetch koi details",
       };
     }
   },

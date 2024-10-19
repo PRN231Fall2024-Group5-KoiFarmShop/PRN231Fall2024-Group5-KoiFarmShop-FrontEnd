@@ -16,11 +16,17 @@ import { useRouter } from "next/navigation";
 import koiBreedApi, { KoiBreed } from "@/lib/api/koiBreedApi";
 import { CircleUser, ShoppingCart } from "lucide-react";
 import { getCart } from "@/lib/cart";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 
 const Header = () => {
-  
   const [koiBreeds, setKoiBreeds] = useState<KoiBreed[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [cartItemCount, setCartItemCount] = useState(0);
@@ -28,7 +34,7 @@ const Header = () => {
   const [user, setUser] = useState<any>(null);
   useEffect(() => {
     console.log("User", localStorage.getItem("user"));
-    if(localStorage.getItem("user") != null){
+    if (localStorage.getItem("user") != null) {
       setUser(JSON.parse(localStorage.getItem("user") as string));
     }
   }, []);
@@ -39,12 +45,12 @@ const Header = () => {
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
     setUser(null);
-  }
+  };
 
   useEffect(() => {
     const fetchKoiBreeds = async () => {
       try {
-        const response = await koiBreedApi.getList();
+        const response = await koiBreedApi.getAll();
         if (response.isSuccess) {
           setKoiBreeds(response.data.filter((breed) => !breed.isDeleted));
         }
@@ -59,7 +65,7 @@ const Header = () => {
   useEffect(() => {
     const updateCartCount = () => {
       const cart = getCart();
-      setCartItemCount(cart.reduce((total, item) => total + item.quantity, 0));
+      setCartItemCount(cart.length);
     };
 
     updateCartCount();
@@ -88,7 +94,7 @@ const Header = () => {
         { name: "Policy", href: "/policy" },
         { name: "Buyer's Guide", href: "/buyers-guide" },
       ],
-    }
+    },
   ];
 
   return (
@@ -200,51 +206,68 @@ const Header = () => {
                   </NavigationMenuItem>
                 ))}
               </NavigationMenuList>
-              {
-                user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="icon" className="rounded-full ml-2">
-                        {
-                          user?.imageUrl ? (
-                            <img src={user?.imageUrl} className="rounded-full" />
-                          ) : (
-                            <CircleUser className="h-5 w-5" />
-                          )
-                        }
-                        <span className="sr-only">Toggle user menu</span>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="ml-2 rounded-full"
+                    >
+                      {user?.imageUrl ? (
+                        <img
+                          src={user?.imageUrl}
+                          alt="User Avatar"
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <CircleUser className="h-5 w-5" />
+                      )}
+                      <span className="sr-only">Toggle user menu</span>
                     </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      Profile
+                    </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => router.push("/profile")}
-                    >Profile</DropdownMenuItem>
+                      onClick={() => router.push("/profile/order-history")}
+                    >
+                      Orders
+                    </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => router.push("/profile/wallet")}
-                    >Wallet</DropdownMenuItem>
+                      onClick={() =>
+                        router.push("/profile/transaction-history")
+                      }
+                    >
+                      Transactions
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/profile/wallet")}>
+                      Wallet
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Your Fish</DropdownMenuItem>
                     <DropdownMenuItem>Your Consignment</DropdownMenuItem>
-                    <DropdownMenuItem>Orders</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-                    </DropdownMenuContent>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
                 </DropdownMenu>
-                ) : (
-                  <div>
-                    <Link href="/login" legacyBehavior passHref>
-                      <NavigationMenuLink
-                        className={
-                          "group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-transparent focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-                        }
-                      >
-                        Login
-                      </NavigationMenuLink>
-                    </Link>
-                  </div>
-                )
-              }
+              ) : (
+                <div>
+                  <Link href="/login" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={
+                        "group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-transparent focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                      }
+                    >
+                      Login
+                    </NavigationMenuLink>
+                  </Link>
+                </div>
+              )}
             </NavigationMenu>
             <Link href="/cart" className="relative">
               <ShoppingCart className="h-6 w-6" />
