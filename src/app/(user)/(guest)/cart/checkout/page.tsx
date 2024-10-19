@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import walletAPI from "@/lib/api/walletAPI";
 
 interface ExtendedCartItem extends CartItem {
   consign: boolean;
@@ -119,6 +120,11 @@ export default function CheckoutPage() {
         variant: "destructive",
       });
       return;
+    }
+
+    const walletResponse = await walletAPI.getCurrentUserWallet();
+    if (!walletResponse.isSuccess) {
+      throw new Error("Failed to initialize wallet");
     }
 
     const orderData = createOrderDataFromCart(
