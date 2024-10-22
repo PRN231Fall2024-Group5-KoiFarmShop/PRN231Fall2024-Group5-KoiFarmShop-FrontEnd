@@ -92,6 +92,36 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDepositByPayOs = async () => {
+    const amount = parseFloat(depositAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid positive number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    const response = await walletAPI.depositMoneyByPayOs(amount);
+    setLoading(false);
+
+    if (response.isSuccess && response.data) {
+      toast({
+        title: "Success",
+        description: "Deposit initiated successfully",
+      });
+      window.location.href = response.data.payUrl;
+    } else {
+      toast({
+        title: "Error",
+        description: response.message,
+        variant: "destructive",
+      });
+    }
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Allow empty string or numbers with up to 2 decimal places
@@ -171,7 +201,10 @@ export default function ProfilePage() {
                 </div>
                 <DialogFooter>
                   <Button onClick={handleDeposit} disabled={loading}>
-                    {loading ? "Processing..." : "Deposit"}
+                    {loading ? "Processing..." : "Deposit VNPay"}
+                  </Button>
+                  <Button onClick={handleDepositByPayOs} disabled={loading}>
+                    {loading ? "Processing..." : "Deposit PayOS"}
                   </Button>
                 </DialogFooter>
               </DialogContent>

@@ -1,1 +1,1 @@
-export const backendUrl = "https://koi.eventzone.id.vn/api/v1/";
+export const backendUrl = "https://koi-api.uydev.id.vn/api/v1/";

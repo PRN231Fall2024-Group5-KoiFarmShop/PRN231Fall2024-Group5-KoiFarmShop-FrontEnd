@@ -105,6 +105,25 @@ const walletAPI = {
     }
   },
 
+  depositMoneyByPayOs: async (
+    amount: number,
+  ): Promise<ApiResponse<DepositResponse>> => {
+    try {
+      const response = await axiosClient.post<ApiResponse<DepositResponse>>(
+        `/create-payment-link-payos`,
+        { amount },
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error depositing money by PayOs:", error);
+      return {
+        isSuccess: false,
+        data: null,
+        message: "Failed to create deposit order. Please try again.",
+      };
+    }
+  },
+
   getWalletTransactions: async (): Promise<
     ApiResponse<WalletTransaction[]>
   > => {
