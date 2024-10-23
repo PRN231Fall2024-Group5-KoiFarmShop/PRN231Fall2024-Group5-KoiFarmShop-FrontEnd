@@ -22,6 +22,8 @@ const KoiCard: React.FC<KoiCardProps> = ({ koi }) => {
     });
   };
 
+  console.log(koi);
+
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-primary bg-white shadow">
       <div className="relative aspect-[3/4] w-full">
@@ -59,13 +61,27 @@ const KoiCard: React.FC<KoiCardProps> = ({ koi }) => {
         <div className="my-2 flex flex-col gap-3 text-sm text-foreground">
           <p>
             <span className="font-semibold">Breed:</span>{" "}
-            {koi.koiBreeds[0].name}
+            {koi.koiBreeds.map((breed) => breed.name).join(", ")}
           </p>
           <p>
-            <span className="font-semibold">Age:</span> {koi.age} years
+            <span className="font-semibold">
+              {koi.age ? "Age:" : "Date of Birth:"}
+            </span>{" "}
+            {koi.age
+              ? `${koi.age} years`
+              : koi.dob
+                ? new Date(koi.dob)
+                    .toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                    .replace(/\//g, "-")
+                : "Unknown"}
           </p>
           <p>
-            <span className="font-semibold">Seller:</span> {koi.consignedBy}
+            <span className="font-semibold">Seller:</span>{" "}
+            {koi.ownerId ?? "Koi Farm"}
           </p>
           <p>
             <span className="font-semibold">Gender:</span> {koi.gender}

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import KoiCard from "../breed/[breedId]/components/KoiCard";
 import {
   Select,
@@ -42,14 +41,14 @@ const SearchPage = () => {
   const [currentSearchTerm, setCurrentSearchTerm] =
     useState<string>(searchTerm);
   const [sortOption, setSortOption] = useState<string>(
-    searchParams.get("sort") || "newest",
+    searchParams.get("sort") || "Name",
   );
   const [selectedBreed, setSelectedBreed] = useState<string>(
     searchParams.get("breed") || "all",
   );
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({
     min: parseInt(searchParams.get("minPrice") || "0"),
-    max: parseInt(searchParams.get("maxPrice") || "10000"),
+    max: parseInt(searchParams.get("maxPrice") || "10000000"),
   });
   const [currentPage, setCurrentPage] = useState<number>(
     parseInt(searchParams.get("page") || "1"),
@@ -80,17 +79,26 @@ const SearchPage = () => {
     const fetchKois = async () => {
       setIsLoading(true);
       try {
+        let filter = "";
+        if (selectedBreed !== "all") {
+          filter += `KoiBreeds/any(kb: kb/Id eq ${selectedBreed})`;
+        }
+        if (searchTerm) {
+          filter += filter ? " and " : "";
+          filter += `contains(Name, '${searchTerm}')`;
+        }
+        filter += filter ? " and " : "";
+        filter += `Price ge ${priceRange.min} and Price le ${priceRange.max}`;
+
         const params: KoiFishQueryParams = {
           pageNumber: currentPage,
           pageSize: ITEMS_PER_PAGE,
-          searchTerm: searchTerm,
-          koiBreedId:
-            selectedBreed !== "all" ? parseInt(selectedBreed) : undefined,
-          minPrice: priceRange.min,
-          maxPrice: priceRange.max,
           sortBy: sortOption,
+          searchTerm: filter,
         };
-        const response = await koiFishApi.getAll(params);
+
+        const response = await koiFishApi.getAvailableKoi(params);
+
         if (response.isSuccess) {
           setKois(response.data);
           setTotalPages(response.metadata?.totalPages || 1);
@@ -152,19 +160,6 @@ const SearchPage = () => {
     updateQueryParams({ page: page.toString() });
   };
 
-  const sortedKois = [...kois].sort((a, b) => {
-    switch (sortOption) {
-      case "newest":
-        return b.id - a.id;
-      case "price-low-high":
-        return a.price - b.price;
-      case "price-high-low":
-        return b.price - a.price;
-      default:
-        return 0;
-    }
-  });
-
   const getPageNumbers = () => {
     const pageNumbers = [];
     const totalPageNumbers = 5;
@@ -198,8 +193,6 @@ const SearchPage = () => {
 
     return pageNumbers;
   };
-
-  // Add this function to format the price in VND
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -252,13 +245,9 @@ const SearchPage = () => {
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent className="bg-white text-primary">
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="price-low-high">
-                  Price: Low to High
-                </SelectItem>
-                <SelectItem value="price-high-low">
-                  Price: High to Low
-                </SelectItem>
+                <SelectItem value="Name">Name</SelectItem>
+                <SelectItem value="Price asc">Price: Low to High</SelectItem>
+                <SelectItem value="Price desc">Price: High to Low</SelectItem>
               </SelectContent>
             </Select>
             <Select value={selectedBreed} onValueChange={handleBreedChange}>
@@ -267,14 +256,11 @@ const SearchPage = () => {
               </SelectTrigger>
               <SelectContent className="bg-white text-primary">
                 <SelectItem value="all">All Breeds</SelectItem>
-                {breeds.map(
-                  (breed) =>
-                    breed.id && (
-                      <SelectItem key={breed.id} value={breed.id.toString()}>
-                        {breed.name}
-                      </SelectItem>
-                    ),
-                )}
+                {breeds.map((breed) => (
+                  <SelectItem key={breed.id} value={breed.id.toString()}>
+                    {breed.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </form>
@@ -298,7 +284,7 @@ const SearchPage = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedKois.map((koi) => (
+          {kois.map((koi) => (
             <KoiCard key={koi.id} koi={koi} />
           ))}
         </div>
