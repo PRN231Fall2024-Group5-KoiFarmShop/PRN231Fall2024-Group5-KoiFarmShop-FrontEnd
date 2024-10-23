@@ -240,7 +240,7 @@ const koiFishApi = {
   // Add this new function to your koiFishApi object
   getMultipleKoiDetails: async (
     ids: number[],
-  ): Promise<ApiResponse<KoiFishOdata[]>> => {
+  ): Promise<ApiResponse<KoiFish[]>> => {
     if (ids.length === 0) {
       return { isSuccess: false, data: [], message: "No IDs provided" };
     }
@@ -252,7 +252,11 @@ const koiFishApi = {
     const query = `/odata/koi-fishes?$filter=id in (${idsString})`;
     try {
       const response = await axiosClient.get<{ value: KoiFishOdata[] }>(query);
-      return { isSuccess: true, data: response.data.value, message: "Success" };
+      return {
+        isSuccess: true,
+        data: response.data.value.map(mapOdataToKoiFish),
+        message: "Success",
+      };
     } catch (error) {
       console.error("Error fetching multiple koi details:", error);
       return {
