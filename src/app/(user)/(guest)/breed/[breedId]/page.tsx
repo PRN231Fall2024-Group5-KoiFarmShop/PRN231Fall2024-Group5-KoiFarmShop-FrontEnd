@@ -26,7 +26,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import koiFishApi, { KoiFish, KoiFishQueryParams } from "@/lib/api/koiFishApi";
+import koiFishApi, {
+  KoiFishOdata,
+  KoiFishQueryParams,
+  KoiFish,
+} from "@/lib/api/koiFishApi";
 import koiBreedApi from "@/lib/api/koiBreedApi";
 
 const ITEMS_PER_PAGE = 9;
@@ -54,13 +58,14 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
           setError(breedResponse.message);
         }
 
-        // Fetch kois for this breed
+        // Fetch available kois for this breed
         const koiParams: KoiFishQueryParams = {
           koiBreedId: parseInt(breedId),
           pageNumber: currentPage,
           pageSize: ITEMS_PER_PAGE,
+          searchTerm: searchTerm,
         };
-        const koiResponse = await koiFishApi.getAll(koiParams);
+        const koiResponse = await koiFishApi.getAvailableKoiByBreed(koiParams);
         if (koiResponse.isSuccess) {
           setKois(koiResponse.data);
           setTotalPages(koiResponse.metadata?.totalPages || 1);
@@ -75,7 +80,7 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
     };
 
     fetchBreedAndKois();
-  }, [breedId, currentPage]);
+  }, [breedId, currentPage, searchTerm]);
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -94,7 +99,10 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
   const sortedKois = [...filteredKois].sort((a, b) => {
     switch (sortOption) {
       case "newest":
-        return b.id - a.id;
+        return (
+          new Date(b.modifiedAt ?? b.createdAt ?? "").getTime() -
+          new Date(a.modifiedAt ?? a.createdAt ?? "").getTime()
+        );
       case "price-low-high":
         return a.price - b.price;
       case "price-high-low":
@@ -228,7 +236,7 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
             </Select>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedKois.map((koi) => (
+            {kois.map((koi) => (
               <KoiCard key={koi.id} koi={koi} />
             ))}
           </div>
