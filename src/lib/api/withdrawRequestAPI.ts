@@ -10,6 +10,7 @@ export interface WithdrawnRequest {
     requestDate: string;
     user?: any;
     createdAt: string;
+    imageUrl: string;
 }
 
 interface ApiResponse<T> {
@@ -26,31 +27,29 @@ const withdrawnRequestAPI = {
         "WithdrawnRequest"
       );
       return response.data;
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error fetching withdrawn requests:", error);
       return {
         isSuccess: false,
         data: null,
-        message: "Failed to fetch withdrawn requests. Please try again.",
+        message: error.response.data.message || "Failed to fetch withdrawn requests. Please try again.",
       };
     }
   },
 
   // Get withdrawn requests by user ID
-  getWithdrawnRequestsByUserId: async (
-    userId: number
-  ): Promise<ApiResponse<WithdrawnRequest[]>> => {
+  getWithdrawnRequestsByUserId: async (): Promise<ApiResponse<WithdrawnRequest[]>> => {
     try {
       const response = await axiosClient.get<ApiResponse<WithdrawnRequest[]>>(
-        `WithdrawnRequest/GetListByUserId?userId=${userId}`
+        `WithdrawnRequest/GetListByUserId`
       );
       return response.data;
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error fetching user's withdrawn requests:", error);
       return {
         isSuccess: false,
         data: null,
-        message: "Failed to fetch withdrawn requests for the user. Please try again.",
+        message: error.response.data.message || "Failed to fetch withdrawn requests for the user. Please try again.",
       };
     }
   },
@@ -58,20 +57,20 @@ const withdrawnRequestAPI = {
   // Create a new withdrawn request
   createWithdrawnRequest: async (
     bankNote: string,
-    amount: number
+    amount: string
   ): Promise<ApiResponse<WithdrawnRequest>> => {
     try {
       const response = await axiosClient.post<ApiResponse<WithdrawnRequest>>(
         "WithdrawnRequest/CreateRequest",
-        { bankNote, amount }
+        { bankNote, amount: amount }
       );
       return response.data;
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error creating withdrawn request:", error);
       return {
         isSuccess: false,
         data: null,
-        message: "Failed to create withdrawn request. Please try again.",
+        message: error.response.data.message || "Failed to create withdrawn request. Please try again.",
       };
     }
   },
@@ -84,7 +83,7 @@ const withdrawnRequestAPI = {
     try {
       const response = await axiosClient.post<ApiResponse<WithdrawnRequest>>(
         `WithdrawnRequest/ApproveRequest/${id}`,
-        { approvalNote }
+        approvalNote
       );
       return response.data;
     } catch (error) {

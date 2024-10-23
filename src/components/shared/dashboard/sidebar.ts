@@ -30,7 +30,13 @@ export const MANAGER_SIDEBAR = [{
     "icon": "Clipboard",
     "name": "Manage Fish Breed",
     "href": "/manager/breed-management"
-    }, {
+    }, 
+    {
+    "icon": "Clipboard",
+    "name": "Manage Withdrawm",
+    "href": "/manager/withdrawn"
+    },
+    {
     "icon": "PackageCheck",
     "name": "Manage Sale Requests",
     "href": "#"
