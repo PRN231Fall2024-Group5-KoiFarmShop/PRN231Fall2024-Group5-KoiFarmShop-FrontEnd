@@ -125,21 +125,18 @@ export default function CreateConsignmentPage() {
       // Create new koi fish
       const newKoiResponse = await koiFishApi.create({
         ...values.fish,
-        // gender: values.fish.gender ? "Male" : "Female",
+        personalityTraits: values.fish.personalityTraits || "",
+        gender: values.fish.gender ? "Male" : "Female",
         isAvailableForSale: false,
         price: 0,
         isConsigned: true,
         isSold: false,
-        // consignedBy: "Owner",
-        // koiCertificates: [],
-        // koiFishImages: [],
-        // koiDiaries: [],
-        // consignments: [],
-        // createdAt: new Date().toISOString(),
-        // modifiedAt: new Date().toISOString(),
-        // isDeleted: false,
-        // ownerId: 0,
-        // koiBreeds: [],
+        koiBreeds: [],
+        ownerId: null,
+        consignedBy: null,
+        koiCertificates: [],
+        koiFishImages: [],
+        koiDiaries: []
       });
 
       if (!newKoiResponse.isSuccess) {
@@ -340,7 +337,7 @@ export default function CreateConsignmentPage() {
                   onValueChange={(value) =>
                     field.onChange([...field.value, parseInt(value)])
                   }
-                  value={field.value[field.value.length - 1]?.toString()}
+                  value={(field.value[field.value.length - 1] as string)?.toString()}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select breeds" />
