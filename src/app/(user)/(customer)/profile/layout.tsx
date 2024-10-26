@@ -9,6 +9,7 @@ const sidebarItems = [
   { name: "General", href: "/profile" },
   // { name: "Deposit", href: "/profile/deposit" },
   // { name: "Withdraw", href: "/profile/withdraw" },
+  { name: "My Koi Fish", href: "/profile/koi-fish" },
   { name: "Order History", href: "/profile/order-history" },
   { name: "Transaction History", href: "/profile/transaction-history" },
 ];
