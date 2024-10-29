@@ -3,13 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import koiFishApi from "@/lib/api/koiFishApi";
-import koiDietApi from "@/lib/api/koiDiet";
+import koiFishApi, { KoiFishCreate } from "@/lib/api/koiFishApi";
 import koiBreedApi, { KoiBreed } from "@/lib/api/koiBreedApi";
-import consignmentAPI from "@/lib/api/consignmentAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -18,8 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatPriceVND } from "@/lib/utils";
-import { DateRangePicker } from "@/app/(user)/(guest)/cart/components/date-range-picker";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,6 +26,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { uploadImage } from "@/lib/configs/firebase";
 
 const fishSchema = z.object({
   name: z.string().min(1, "Fish name is required"),
@@ -47,50 +43,35 @@ const fishSchema = z.object({
     .min(1, "At least one breed must be selected"),
 });
 
-const consignmentSchema = z.object({
-  dietId: z.number().min(1, "Diet is required"),
-  startDate: z.date(),
-  endDate: z.date(),
-  note: z.string().optional(),
-});
-
-const schema = z.object({
-  fish: fishSchema,
-  consignment: consignmentSchema,
-});
-
-export default function CreateConsignmentPage() {
+export default function CreateKoiFishPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [koiBreeds, setKoiBreeds] = useState<KoiBreed[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  const [user, setUser] = useState<any>(null);
+  useEffect(() => {
+    // console.log("User", localStorage.getItem("user"));
+    if (localStorage.getItem("user") != null) {
+      setUser(JSON.parse(localStorage.getItem("user") as string));
+    }
+  }, []);
 
   const form = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(fishSchema),
     defaultValues: {
-      fish: {
-        name: "",
-        origin: "",
-        gender: true,
-        age: 0,
-        length: 0,
-        weight: 0,
-        personalityTraits: "",
-        dailyFeedAmount: 0,
-        lastHealthCheck: "",
-        koiBreedIds: [],
-      },
-      consignment: {
-        dietId: 0,
-        startDate: new Date(),
-        endDate: new Date(),
-        note: "",
-      },
+      name: "",
+      origin: "",
+      gender: true,
+      age: 0,
+      length: 0,
+      weight: 0,
+      personalityTraits: "",
+      dailyFeedAmount: 0,
+      lastHealthCheck: "",
+      koiBreedIds: [],
     },
-  });
-
-  const { data: diets, isLoading: isLoadingDiets } = useQuery({
-    queryKey: ["diets"],
-    queryFn: () => koiDietApi.getDietList(),
   });
 
   useEffect(() => {
@@ -104,83 +85,83 @@ export default function CreateConsignmentPage() {
     }
   };
 
-  const calculateConsignmentDuration = (startDate: Date, endDate: Date) => {
-    return differenceInDays(endDate, startDate) + 1;
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      setImageFiles(fileArray);
+
+      const previewUrls = fileArray.map((file) => URL.createObjectURL(file));
+      setImagePreviews(previewUrls);
+    }
   };
 
-  const calculateConsignmentPrice = (
-    dietId: number,
-    startDate: Date,
-    endDate: Date,
-  ) => {
-    if (!dietId || !startDate || !endDate) return 0;
-    const duration = calculateConsignmentDuration(startDate, endDate);
-    const diet = diets?.data.find((d) => d.id === dietId);
-    if (!diet) return 0;
-    return diet.dietCost * duration;
-  };
-
-  const handleSaveFish = async (values: z.infer<typeof schema>) => {
+  const handleSaveFish = async (values: z.infer<typeof fishSchema>) => {
     try {
-      // Create new koi fish
-      const newKoiResponse = await koiFishApi.create({
-        ...values.fish,
-        personalityTraits: values.fish.personalityTraits || "",
-        gender: values.fish.gender ? "Male" : "Female",
-        isAvailableForSale: false,
-        price: 0,
-        isConsigned: true,
-        isSold: false,
-        koiBreeds: [],
-        ownerId: null,
-        consignedBy: null,
-        koiCertificates: [],
-        koiFishImages: [],
-        koiDiaries: []
-      });
+      let imageUrlArray: string[] = [];
 
-      if (!newKoiResponse.isSuccess) {
-        throw new Error(newKoiResponse.message);
+      if (imageFiles.length > 0) {
+        try {
+          const uploadedImageUrls = await Promise.all(
+            imageFiles.map((file) => uploadImage(file)),
+          );
+          imageUrlArray = uploadedImageUrls;
+          toast({
+            title: "Images uploaded successfully",
+            description: "The images have been uploaded successfully",
+          });
+        } catch (error: any) {
+          toast({
+            title: "Image upload failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
-      // Create consignment
-      const consignmentData = {
-        ...values.consignment,
-        koiFishId: newKoiResponse.data.id,
-        startDate: values.consignment.startDate.toISOString(),
-        endDate: values.consignment.endDate.toISOString(),
+      const newKoiData: KoiFishCreate = {
+        name: values.name,
+        origin: values.origin,
+        gender: values.gender ? "Male" : "Female",
+        age: values.age,
+        length: values.length,
+        weight: values.weight,
+        isAvailableForSale: false,
+        price: 0,
+        isSold: false,
+        personalityTraits: values.personalityTraits || "",
+        dailyFeedAmount: values.dailyFeedAmount,
+        lastHealthCheck: values.lastHealthCheck,
+        koiBreedIds: values.koiBreedIds,
+        imageUrls: imageUrlArray,
+        ownerId: user.id,
       };
 
-      const response = await consignmentAPI.createConsignment(consignmentData);
-      if (response.isSuccess) {
+      const newKoiResponse = await koiFishApi.createByUser(newKoiData);
+
+      if (newKoiResponse.isSuccess) {
         toast({
           title: "Success",
-          description: "Koi fish and consignment created successfully.",
+          description: "Koi fish created successfully.",
         });
-        router.push("/profile/consignment");
+        router.push("/profile/koi-fish");
       } else {
-        throw new Error(response.message);
+        throw new Error(newKoiResponse.message);
       }
     } catch (error: any) {
       toast({
         title: "Error",
         description:
-          error.message ||
-          "Failed to create koi fish and consignment. Please try again.",
+          error.message || "Failed to create koi fish. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  if (isLoadingDiets) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="container mx-auto p-4">
-      <h1 className="mb-6 text-2xl font-bold">
-        Create New Koi Fish and Consignment
-      </h1>
+      <h1 className="mb-6 text-2xl font-bold">Create New Koi Fish</h1>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSaveFish)}
@@ -188,7 +169,7 @@ export default function CreateConsignmentPage() {
         >
           <FormField
             control={form.control}
-            name="fish.name"
+            name="name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Fish Name</FormLabel>
@@ -202,7 +183,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.origin"
+            name="origin"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Origin</FormLabel>
@@ -216,7 +197,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.gender"
+            name="gender"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
@@ -239,7 +220,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.age"
+            name="age"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Age</FormLabel>
@@ -258,7 +239,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.length"
+            name="length"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Length (cm)</FormLabel>
@@ -277,7 +258,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.weight"
+            name="weight"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Weight (g)</FormLabel>
@@ -296,7 +277,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.dailyFeedAmount"
+            name="dailyFeedAmount"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Daily Feed Amount (g)</FormLabel>
@@ -315,7 +296,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.lastHealthCheck"
+            name="lastHealthCheck"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Last Health Check</FormLabel>
@@ -329,7 +310,7 @@ export default function CreateConsignmentPage() {
 
           <FormField
             control={form.control}
-            name="fish.koiBreedIds"
+            name="koiBreedIds"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Koi Breeds</FormLabel>
@@ -337,7 +318,9 @@ export default function CreateConsignmentPage() {
                   onValueChange={(value) =>
                     field.onChange([...field.value, parseInt(value)])
                   }
-                  value={(field.value[field.value.length - 1] as string)?.toString()}
+                  value={(
+                    field.value[field.value.length - 1] as string
+                  )?.toString()}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select breeds" />
@@ -376,97 +359,33 @@ export default function CreateConsignmentPage() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="consignment.dietId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Select Diet</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(parseInt(value))}
-                  value={field.value?.toString()}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a diet" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {diets?.data.map((diet) => (
-                      <SelectItem key={diet.id} value={diet.id.toString()}>
-                        {diet.name} - {formatPriceVND(diet.dietCost)}/day
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="consignment"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Consignment Period</FormLabel>
-                <DateRangePicker
-                  dateRange={{
-                    from: field.value.startDate,
-                    to: field.value.endDate,
-                  }}
-                  onDateRangeChange={(range) => {
-                    if (range?.from && range?.to) {
-                      field.onChange({
-                        ...field.value,
-                        startDate: range.from,
-                        endDate: range.to,
-                      });
-                    }
-                  }}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="consignment.note"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Note (optional)</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Add a note for this consignment"
+          <FormItem>
+            <FormLabel>Fish Images</FormLabel>
+            <FormControl>
+              <Input
+                id="imageFile"
+                type="file"
+                onChange={handleImageChange}
+                multiple
+                accept="image/*"
+              />
+            </FormControl>
+            {imagePreviews.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {imagePreviews.map((preview, index) => (
+                  <img
+                    key={index}
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="h-24 w-full rounded-sm object-cover"
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+                ))}
+              </div>
             )}
-          />
+            <FormMessage />
+          </FormItem>
 
-          <div>
-            <p>
-              Duration:{" "}
-              {calculateConsignmentDuration(
-                form.watch("consignment.startDate"),
-                form.watch("consignment.endDate"),
-              )}{" "}
-              days
-            </p>
-            <p>
-              Estimated Price:{" "}
-              {formatPriceVND(
-                calculateConsignmentPrice(
-                  form.watch("consignment.dietId"),
-                  form.watch("consignment.startDate"),
-                  form.watch("consignment.endDate"),
-                ),
-              )}
-            </p>
-          </div>
-
-          <Button type="submit">Create Koi Fish and Consignment</Button>
+          <Button type="submit">Create Koi Fish</Button>
         </form>
       </Form>
     </div>

@@ -13,6 +13,42 @@ interface ApiResponse<T> {
   };
 }
 
+export interface KoiFishCreate {
+  name: string;
+  origin: string;
+  gender: string;
+  age: number;
+  length: number;
+  weight: number;
+  isAvailableForSale: boolean;
+  price: number;
+  isSold: boolean;
+  personalityTraits: string;
+  dailyFeedAmount: number;
+  lastHealthCheck: string;
+  koiBreedIds: number[];
+  imageUrls: string[];
+  ownerId: string;
+}
+
+export interface KoiFishUpdate {
+  name: string;
+  origin: string;
+  gender: boolean;
+  dob: string;
+  length: number;
+  weight: number;
+  isAvailableForSale: boolean;
+  price: number;
+  isSold: boolean;
+  isDeleted: boolean;
+  personalityTraits: string;
+  dailyFeedAmount: number;
+  lastHealthCheck: string;
+  koiBreedIds: number[];
+  imageUrls: string[];
+}
+
 export interface KoiFish {
   id: number;
   name: string;
@@ -227,9 +263,26 @@ const koiFishApi = {
     );
     return response.data;
   },
+  createByUser: async (data: KoiFishCreate): Promise<ApiResponse<KoiFish>> => {
+    const response = await axiosClient.post<ApiResponse<KoiFish>>(
+      "/koi-fishes",
+      data,
+    );
+    return response.data;
+  },
   update: async (
     id: number,
     data: Partial<KoiFish>,
+  ): Promise<ApiResponse<KoiFish>> => {
+    const response = await axiosClient.put<ApiResponse<KoiFish>>(
+      `/koi-fishes/${id}`,
+      data,
+    );
+    return response.data;
+  },
+  updateByUser: async (
+    id: number,
+    data: KoiFishUpdate,
   ): Promise<ApiResponse<KoiFish>> => {
     const response = await axiosClient.put<ApiResponse<KoiFish>>(
       `/koi-fishes/${id}`,
