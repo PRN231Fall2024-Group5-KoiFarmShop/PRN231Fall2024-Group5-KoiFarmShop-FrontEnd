@@ -13,6 +13,42 @@ interface ApiResponse<T> {
   };
 }
 
+export interface KoiFishCreate {
+  name: string;
+  origin: string;
+  gender: string;
+  age: number;
+  length: number;
+  weight: number;
+  isAvailableForSale: boolean;
+  price: number;
+  isSold: boolean;
+  personalityTraits: string;
+  dailyFeedAmount: number;
+  lastHealthCheck: string;
+  koiBreedIds: number[];
+  imageUrls: string[];
+  ownerId: string;
+}
+
+export interface KoiFishUpdate {
+  name: string;
+  origin: string;
+  gender: boolean;
+  dob: string;
+  length: number;
+  weight: number;
+  isAvailableForSale: boolean;
+  price: number;
+  isSold: boolean;
+  isDeleted: boolean;
+  personalityTraits: string;
+  dailyFeedAmount: number;
+  lastHealthCheck: string;
+  koiBreedIds: number[];
+  imageUrls: string[];
+}
+
 export interface KoiFish {
   id: number;
   name: string;
@@ -42,6 +78,18 @@ export interface KoiFish {
   deletedAt?: string | null;
   deletedBy?: number | null;
   isDeleted?: boolean;
+  consignments?: {
+    id: number;
+    startDate: string;
+    endDate: string;
+    consignmentStatus: string;
+    dietId: number;
+    dietCost: number;
+    totalDays: number;
+    projectedCost: number;
+    actualCost: number | null;
+    note: string | null;
+  }[];
 }
 
 export interface KoiFishOdata {
@@ -68,14 +116,41 @@ export interface KoiFishOdata {
   DeletedBy: number | null;
   IsDeleted: boolean;
   KoiBreeds: {
+    Id: number;
     Name: string;
     Content: string;
     ImageUrl: string | null;
-    Id: number;
     CreatedAt: string;
     CreatedBy: number;
     ModifiedAt: string;
     ModifiedBy: number;
+    DeletedAt: string | null;
+    DeletedBy: number | null;
+    IsDeleted: boolean;
+  }[];
+  ConsignmentForNurtures: {
+    Id: number;
+    CustomerId: number;
+    KoiFishId: number;
+    DietId: number;
+    StaffId: number | null;
+    ConsignmentDate: string;
+    StartDate: string;
+    EndDate: string;
+    Note: string | null;
+    DietCost: number;
+    LaborCost: number | null;
+    DailyFeedAmount: number | null;
+    TotalDays: number;
+    ProjectedCost: number;
+    ActualCost: number | null;
+    InspectionRequired: boolean | null;
+    InspectionDate: string | null;
+    ConsignmentStatus: string;
+    CreatedAt: string;
+    CreatedBy: number;
+    ModifiedAt: string | null;
+    ModifiedBy: number | null;
     DeletedAt: string | null;
     DeletedBy: number | null;
     IsDeleted: boolean;
@@ -133,7 +208,7 @@ const mapOdataToKoiFish = (odataKoi: KoiFishOdata): KoiFish => ({
   isSold: odataKoi.IsSold,
   consignedBy: odataKoi.OwnerId ? "Owner" : null,
   koiCertificates: [],
-  koiBreeds: odataKoi.KoiBreeds.map((breed) => ({
+  koiBreeds: odataKoi.KoiBreeds?.map((breed) => ({
     id: breed.Id,
     name: breed.Name,
     content: breed.Content,
@@ -149,6 +224,18 @@ const mapOdataToKoiFish = (odataKoi: KoiFishOdata): KoiFish => ({
   deletedAt: odataKoi.DeletedAt,
   deletedBy: odataKoi.DeletedBy,
   isDeleted: odataKoi.IsDeleted,
+  consignments: odataKoi.ConsignmentForNurtures?.map((consignment) => ({
+    id: consignment.Id,
+    startDate: consignment.StartDate,
+    endDate: consignment.EndDate,
+    consignmentStatus: consignment.ConsignmentStatus,
+    dietId: consignment.DietId,
+    dietCost: consignment.DietCost,
+    totalDays: consignment.TotalDays,
+    projectedCost: consignment.ProjectedCost,
+    actualCost: consignment.ActualCost,
+    note: consignment.Note,
+  })),
 });
 
 const koiFishApi = {
@@ -176,9 +263,26 @@ const koiFishApi = {
     );
     return response.data;
   },
+  createByUser: async (data: KoiFishCreate): Promise<ApiResponse<KoiFish>> => {
+    const response = await axiosClient.post<ApiResponse<KoiFish>>(
+      "/koi-fishes",
+      data,
+    );
+    return response.data;
+  },
   update: async (
     id: number,
     data: Partial<KoiFish>,
+  ): Promise<ApiResponse<KoiFish>> => {
+    const response = await axiosClient.put<ApiResponse<KoiFish>>(
+      `/koi-fishes/${id}`,
+      data,
+    );
+    return response.data;
+  },
+  updateByUser: async (
+    id: number,
+    data: KoiFishUpdate,
   ): Promise<ApiResponse<KoiFish>> => {
     const response = await axiosClient.put<ApiResponse<KoiFish>>(
       `/koi-fishes/${id}`,
@@ -252,6 +356,7 @@ const koiFishApi = {
     const query = `/odata/koi-fishes?$filter=id in (${idsString})`;
     try {
       const response = await axiosClient.get<{ value: KoiFishOdata[] }>(query);
+      console.log(response.data.value.map(mapOdataToKoiFish));
       return {
         isSuccess: true,
         data: response.data.value.map(mapOdataToKoiFish),
@@ -364,6 +469,91 @@ const koiFishApi = {
         isSuccess: false,
         data: [],
         message: "Failed to fetch available koi by breed",
+      };
+    }
+  },
+
+  getMyKoiFish: async (
+    params: KoiFishQueryParams = {},
+  ): Promise<ApiResponse<KoiFish[]>> => {
+    let query = "/odata/my-koi-fishes?$expand=KoiBreeds,ConsignmentForNurtures";
+
+    // Add pagination parameters if provided
+    if (params.pageNumber && params.pageSize) {
+      query += `&$skip=${(params.pageNumber - 1) * params.pageSize}&$top=${params.pageSize}`;
+    }
+
+    // Add sorting if provided
+    if (params.sortBy) {
+      query += `&$orderby=${encodeURIComponent(params.sortBy)}`;
+    }
+
+    // Add search term if provided
+    if (params.searchTerm) {
+      query += `&$filter=contains(Name, '${encodeURIComponent(params.searchTerm)}')`;
+    }
+
+    try {
+      const response =
+        await axiosClient.get<ODataResponse<KoiFishOdata>>(query);
+      const totalCount =
+        response.data["@odata.count"] || response.data.value.length;
+      const mappedData = response.data.value.map(mapOdataToKoiFish);
+
+      return {
+        isSuccess: true,
+        data: mappedData,
+        message: "Success",
+        metadata: {
+          currentPage: params.pageNumber || 1,
+          pageSize: params.pageSize || response.data.value.length,
+          totalCount: totalCount,
+          totalPages: Math.ceil(
+            totalCount / (params.pageSize || response.data.value.length),
+          ),
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching my koi fish:", error);
+      return {
+        isSuccess: false,
+        data: [],
+        message: "Failed to fetch my koi fish",
+      };
+    }
+  },
+
+  // Add this new function to your koiFishApi object
+  getMyKoiFishDetailById: async (
+    id: number,
+  ): Promise<ApiResponse<KoiFish | null>> => {
+    let query = `/odata/my-koi-fishes?$filter=Id eq ${id}&$expand=KoiBreeds,ConsignmentForNurtures`;
+
+    try {
+      const response =
+        await axiosClient.get<ODataResponse<KoiFishOdata>>(query);
+
+      if (response.data.value.length === 0) {
+        return {
+          isSuccess: false,
+          data: null,
+          message: "Koi fish not found",
+        };
+      }
+
+      const mappedData = mapOdataToKoiFish(response.data.value[0]);
+
+      return {
+        isSuccess: true,
+        data: mappedData,
+        message: "Success",
+      };
+    } catch (error) {
+      console.error("Error fetching my koi fish detail:", error);
+      return {
+        isSuccess: false,
+        data: null,
+        message: "Failed to fetch koi fish detail",
       };
     }
   },

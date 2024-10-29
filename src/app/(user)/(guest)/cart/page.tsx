@@ -60,6 +60,7 @@ export default function CartPage() {
       if (itemIds.length === 0) return [];
       const response = await koiFishApi.getMultipleKoiDetails(itemIds);
       if (!response.isSuccess) throw new Error(response.message);
+      console.log(response);
       return response.data;
     },
     enabled: cartItems.length > 0,
@@ -224,6 +225,10 @@ export default function CartPage() {
     (cartItems.length > 0 && koiDetails === undefined) || diets === undefined
       ? "Failed to fetch data. Please try again."
       : null;
+
+  console.log(cartItems.length);
+  console.log(koiDetails);
+  console.log(diets);
 
   const isConsignmentConfigValid = (config: ConsignmentConfig | undefined) => {
     if (!config) return false;
