@@ -108,12 +108,12 @@ function MyKoiFishPage() {
 
   const handleConsignKoi = (fishId: number) => {
     // Implement consign logic here
-    router.push(`/profile/koi-fish/${fishId}/create-consignment`);
+    router.push(`/profile/koi-fish/${fishId}/consignment`);
   };
 
   const handleUpdateKoi = (fishId: number) => {
     // Implement update logic here
-    console.log("Update Koi", fishId);
+    router.push(`/profile/koi-fish/${fishId}/update`);
   };
 
   const handleViewKoi = (fishId: number) => {
@@ -152,27 +152,38 @@ function MyKoiFishPage() {
     <div className="container mx-auto p-4">
       <h1 className="mb-4 text-2xl font-bold">My Koi Fish</h1>
       <div className="mb-4 flex">
-        <Input
-          type="text"
-          placeholder="Search by name"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mr-2"
-        />
-        <Button onClick={handleSearch}>Search</Button>
+        <div className="flex items-center">
+          <Input
+            type="text"
+            placeholder="Search by name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="mr-2"
+          />
+          <Button onClick={handleSearch} variant={"outline"}>
+            Search
+          </Button>
+        </div>
+        <Button
+          variant="default"
+          className="ml-auto"
+          onClick={() => router.push("/profile/koi-fish/create")}
+        >
+          Add Koi
+        </Button>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Breed</TableHead>
-            <TableHead>Age</TableHead>
+            <TableHead>Dob</TableHead>
             <TableHead>Length (cm)</TableHead>
             <TableHead>Weight (g)</TableHead>
             <TableHead>Price ($)</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Consignment Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -182,7 +193,9 @@ function MyKoiFishPage() {
               <TableCell>
                 {fish.koiBreeds.map((breed) => breed.name).join(", ")}
               </TableCell>
-              <TableCell>{fish.age}</TableCell>
+              <TableCell>
+                {fish.dob ? new Date(fish.dob).toLocaleDateString() : ""}
+              </TableCell>
               <TableCell>{fish.length}</TableCell>
               <TableCell>{fish.weight}</TableCell>
               <TableCell>{fish.price}</TableCell>
@@ -211,14 +224,14 @@ function MyKoiFishPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleViewKoi(fish.id)}>
+                      View Koi
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleConsignKoi(fish.id)}>
                       Consign Koi
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleUpdateKoi(fish.id)}>
                       Update Koi
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleViewKoi(fish.id)}>
-                      View Koi
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

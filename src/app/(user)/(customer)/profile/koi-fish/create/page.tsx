@@ -27,16 +27,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { uploadImage } from "@/lib/configs/firebase";
+import { Label } from "@/components/ui/label";
+import { CERTIFICATE_TYPES, KoiFishCertificate } from "@/lib/api/koiCertAPI";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 const fishSchema = z.object({
   name: z.string().min(1, "Fish name is required"),
   origin: z.string().min(1, "Origin is required"),
   gender: z.boolean(),
-  age: z.number().min(0, "Age must be a positive number"),
-  length: z.number().min(0, "Length must be a positive number"),
-  weight: z.number().min(0, "Weight must be a positive number"),
+  dob: z.string().min(1, "Date of birth is required"),
+  length: z.number().min(0, "Length must be a positive number").nullable(),
+  weight: z.number().min(0, "Weight must be a positive number").nullable(),
   personalityTraits: z.string().optional(),
-  dailyFeedAmount: z.number().min(0, "Daily feed amount must be positive"),
+  dailyFeedAmount: z
+    .number()
+    .min(0, "Daily feed amount must be positive")
+    .nullable(),
   lastHealthCheck: z.string().min(1, "Last health check date is required"),
   koiBreedIds: z
     .array(z.number())
@@ -49,6 +64,12 @@ export default function CreateKoiFishPage() {
   const [koiBreeds, setKoiBreeds] = useState<KoiBreed[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [certificateFiles, setCertificateFiles] = useState<
+    Array<{
+      file: File;
+      type: string;
+    }>
+  >([]);
 
   const [user, setUser] = useState<any>(null);
   useEffect(() => {
@@ -64,11 +85,11 @@ export default function CreateKoiFishPage() {
       name: "",
       origin: "",
       gender: true,
-      age: 0,
-      length: 0,
-      weight: 0,
+      dob: "",
+      length: null,
+      weight: null,
       personalityTraits: "",
-      dailyFeedAmount: 0,
+      dailyFeedAmount: null,
       lastHealthCheck: "",
       koiBreedIds: [],
     },
@@ -96,20 +117,43 @@ export default function CreateKoiFishPage() {
     }
   };
 
+  const handleCertificateChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    certificateType: string,
+  ) => {
+    const files = e.target.files;
+    if (files && files[0]) {
+      setCertificateFiles((prev) => [
+        ...prev,
+        { file: files[0], type: certificateType },
+      ]);
+    }
+  };
+
   const handleSaveFish = async (values: z.infer<typeof fishSchema>) => {
+    if (imageFiles.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please upload at least one image of your koi fish",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      toast({
+        title: "Creating Koi Fish",
+        description: "Please wait while we create your koi fish...",
+      });
+
       let imageUrlArray: string[] = [];
+      let certificateUrlArray: KoiFishCertificate[] = [];
 
       if (imageFiles.length > 0) {
         try {
-          const uploadedImageUrls = await Promise.all(
+          imageUrlArray = await Promise.all(
             imageFiles.map((file) => uploadImage(file)),
           );
-          imageUrlArray = uploadedImageUrls;
-          toast({
-            title: "Images uploaded successfully",
-            description: "The images have been uploaded successfully",
-          });
         } catch (error: any) {
           toast({
             title: "Image upload failed",
@@ -120,22 +164,55 @@ export default function CreateKoiFishPage() {
         }
       }
 
+      if (certificateFiles.length > 0) {
+        try {
+          const uploadedCertificates = await Promise.all(
+            certificateFiles.map(async ({ file, type }) => ({
+              certificateUrl: await uploadImage(file),
+              certificateType: type,
+            })),
+          );
+          certificateUrlArray = uploadedCertificates as KoiFishCertificate[];
+        } catch (error: any) {
+          toast({
+            title: "Certificate upload failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      if (
+        values.length === null ||
+        values.weight === null ||
+        values.dailyFeedAmount === null
+      ) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all numeric fields with valid numbers",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const newKoiData: KoiFishCreate = {
         name: values.name,
         origin: values.origin,
         gender: values.gender ? "Male" : "Female",
-        age: values.age,
-        length: values.length,
-        weight: values.weight,
+        dob: values.dob,
+        length: values.length || 0,
+        weight: values.weight || 0,
         isAvailableForSale: false,
         price: 0,
         isSold: false,
         personalityTraits: values.personalityTraits || "",
-        dailyFeedAmount: values.dailyFeedAmount,
+        dailyFeedAmount: values.dailyFeedAmount || 0,
         lastHealthCheck: values.lastHealthCheck,
         koiBreedIds: values.koiBreedIds,
         imageUrls: imageUrlArray,
         ownerId: user.id,
+        certificates: certificateUrlArray,
       };
 
       const newKoiResponse = await koiFishApi.createByUser(newKoiData);
@@ -159,233 +236,342 @@ export default function CreateKoiFishPage() {
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   return (
     <div className="container mx-auto p-4">
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/profile">Profile</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/profile/koi-fish">
+                My Koi Fish
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Create New Koi Fish</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <h1 className="mb-6 text-2xl font-bold">Create New Koi Fish</h1>
+
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSaveFish)}
-          className="space-y-4"
+          className="space-y-8"
         >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fish Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter fish name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Basic Information Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fish Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter fish name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <FormField
-            control={form.control}
-            name="origin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Origin</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter fish origin" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="origin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Origin</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter fish origin" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Gender</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(value === "true")}
-                  value={field.value ? "true" : "false"}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Male</SelectItem>
-                    <SelectItem value="false">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="age"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Age</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Enter fish age"
-                    {...field}
-                    onChange={(e) => field.onChange(+e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="length"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Length (cm)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Enter fish length (cm)"
-                    {...field}
-                    onChange={(e) => field.onChange(+e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Weight (g)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Enter fish weight (g)"
-                    {...field}
-                    onChange={(e) => field.onChange(+e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="dailyFeedAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Daily Feed Amount (g)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Enter daily feed amount (g)"
-                    {...field}
-                    onChange={(e) => field.onChange(+e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="lastHealthCheck"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Health Check</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="koiBreedIds"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Koi Breeds</FormLabel>
-                <Select
-                  onValueChange={(value) =>
-                    field.onChange([...field.value, parseInt(value)])
-                  }
-                  value={(
-                    field.value[field.value.length - 1] as string
-                  )?.toString()}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select breeds" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {koiBreeds.map((breed) => (
-                      <SelectItem key={breed.id} value={breed.id.toString()}>
-                        {breed.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="mt-2">
-                  {field.value.map((breedId) => (
-                    <span
-                      key={breedId}
-                      className="mr-2 inline-block rounded-full bg-gray-200 px-3 py-1 text-sm font-semibold text-gray-700"
-                    >
-                      {koiBreeds.find((b) => b.id === breedId)?.name}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          field.onChange(
-                            field.value.filter((id) => id !== breedId),
-                          )
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gender</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value === "true")
                         }
-                        className="ml-2 text-red-500"
+                        value={field.value ? "true" : "false"}
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Male</SelectItem>
+                          <SelectItem value="false">Female</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dob"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date of Birth</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="length"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Length (cm)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter fish length"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === "" ? null : Number(value));
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter fish weight"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === "" ? null : Number(value));
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dailyFeedAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Daily Feed Amount (g)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter daily feed amount"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === "" ? null : Number(value));
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastHealthCheck"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Health Check</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="koiBreedIds"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Koi Breeds</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange([...field.value, parseInt(value)])
+                        }
+                        value={(
+                          field.value[field.value.length - 1] as string
+                        )?.toString()}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select breeds" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {koiBreeds.map((breed) => (
+                            <SelectItem
+                              key={breed.id}
+                              value={breed.id.toString()}
+                            >
+                              {breed.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="mt-2">
+                        {field.value.map((breedId) => (
+                          <Badge
+                            key={breedId}
+                            variant="secondary"
+                            className="mb-2 mr-2"
+                          >
+                            {koiBreeds.find((b) => b.id === breedId)?.name}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                field.onChange(
+                                  field.value.filter((id) => id !== breedId),
+                                )
+                              }
+                              className="ml-2 text-red-500"
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Images Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Fish Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormItem>
+                <FormControl>
+                  <Input
+                    id="imageFile"
+                    type="file"
+                    onChange={handleImageChange}
+                    multiple
+                    accept="image/*"
+                  />
+                </FormControl>
+                {imagePreviews.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                    {imagePreviews.map((preview, index) => (
+                      <img
+                        key={index}
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="h-24 w-full rounded-sm object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
-            )}
-          />
+            </CardContent>
+          </Card>
 
-          <FormItem>
-            <FormLabel>Fish Images</FormLabel>
-            <FormControl>
-              <Input
-                id="imageFile"
-                type="file"
-                onChange={handleImageChange}
-                multiple
-                accept="image/*"
-              />
-            </FormControl>
-            {imagePreviews.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                {imagePreviews.map((preview, index) => (
-                  <img
-                    key={index}
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="h-24 w-full rounded-sm object-cover"
-                  />
+          {/* Certificates Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Certificates</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {CERTIFICATE_TYPES.map((type) => (
+                  <div key={type}>
+                    <Label>{type}</Label>
+                    <Input
+                      type="file"
+                      onChange={(e) => handleCertificateChange(e, type)}
+                      accept="image/*"
+                      className="mt-1"
+                    />
+                  </div>
                 ))}
               </div>
-            )}
-            <FormMessage />
-          </FormItem>
+              {certificateFiles.length > 0 && (
+                <div className="mt-4">
+                  <Label>Selected Certificates:</Label>
+                  <ul className="mt-2 space-y-2">
+                    {certificateFiles.map((cert, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center justify-between rounded-md border p-2"
+                      >
+                        <span>
+                          {cert.type}: {cert.file.name}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setCertificateFiles((prev) =>
+                              prev.filter((_, i) => i !== index),
+                            );
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Remove
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <Button type="submit">Create Koi Fish</Button>
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Koi Fish"}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

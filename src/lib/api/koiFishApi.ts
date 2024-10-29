@@ -1,5 +1,6 @@
 import axios from "axios";
 import axiosClient from "./axiosClient";
+import { KoiFishCertificate } from "./koiCertAPI";
 
 interface ApiResponse<T> {
   data: T;
@@ -17,7 +18,8 @@ export interface KoiFishCreate {
   name: string;
   origin: string;
   gender: string;
-  age: number;
+  dob: string;
+  age?: number;
   length: number;
   weight: number;
   isAvailableForSale: boolean;
@@ -29,6 +31,7 @@ export interface KoiFishCreate {
   koiBreedIds: number[];
   imageUrls: string[];
   ownerId: string;
+  certificates?: KoiFishCertificate[];
 }
 
 export interface KoiFishUpdate {
@@ -67,7 +70,7 @@ export interface KoiFish {
   isConsigned: boolean | null;
   isSold: boolean | null;
   consignedBy: string | null;
-  koiCertificates: any[]; // You may want to create a specific interface for this
+  koiCertificates: KoiFishCertificate[];
   koiBreeds: KoiBreed[];
   koiFishImages: KoiFishImage[];
   koiDiaries: any[]; // You may want to create a specific interface for this
@@ -155,6 +158,18 @@ export interface KoiFishOdata {
     DeletedBy: number | null;
     IsDeleted: boolean;
   }[];
+  KoiFishImages: {
+    Id: number;
+    KoiFishId: number;
+    Name: string | null;
+    ImageUrl: string;
+  }[];
+  KoiCertificates: {
+    Id: number;
+    KoiFishId: number;
+    CertificateType: string;
+    CertificateUrl: string;
+  }[];
 }
 
 export interface KoiBreed {
@@ -207,7 +222,12 @@ const mapOdataToKoiFish = (odataKoi: KoiFishOdata): KoiFish => ({
   isConsigned: odataKoi.IsConsigned,
   isSold: odataKoi.IsSold,
   consignedBy: odataKoi.OwnerId ? "Owner" : null,
-  koiCertificates: [],
+  koiCertificates: odataKoi.KoiCertificates?.map((cert) => ({
+    id: cert.Id,
+    koiFishId: cert.KoiFishId,
+    certificateType: cert.CertificateType,
+    certificateUrl: cert.CertificateUrl,
+  })),
   koiBreeds: odataKoi.KoiBreeds?.map((breed) => ({
     id: breed.Id,
     name: breed.Name,
@@ -215,7 +235,12 @@ const mapOdataToKoiFish = (odataKoi: KoiFishOdata): KoiFish => ({
     imageUrl: breed.ImageUrl,
     isDeleted: breed.IsDeleted,
   })),
-  koiFishImages: [{ id: 0, koiFishId: odataKoi.Id, name: null, imageUrl: "" }],
+  koiFishImages: odataKoi.KoiFishImages?.map((image) => ({
+    id: image.Id,
+    koiFishId: image.KoiFishId,
+    name: image.Name,
+    imageUrl: image.ImageUrl,
+  })),
   koiDiaries: [],
   createdAt: odataKoi.CreatedAt,
   createdBy: odataKoi.CreatedBy,
@@ -527,7 +552,7 @@ const koiFishApi = {
   getMyKoiFishDetailById: async (
     id: number,
   ): Promise<ApiResponse<KoiFish | null>> => {
-    let query = `/odata/my-koi-fishes?$filter=Id eq ${id}&$expand=KoiBreeds,ConsignmentForNurtures`;
+    let query = `/odata/my-koi-fishes?$filter=Id eq ${id}&$expand=KoiBreeds,ConsignmentForNurtures,koiFishImages,KoiCertificates`;
 
     try {
       const response =

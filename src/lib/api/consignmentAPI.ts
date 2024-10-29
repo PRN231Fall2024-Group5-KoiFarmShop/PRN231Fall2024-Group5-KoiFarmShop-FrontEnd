@@ -35,6 +35,14 @@ interface CreateConsignmentData {
   note?: string;
 }
 
+// Add new enum for consignment statuses
+export enum ConsignmentStatus {
+  CANCELED = "CANCELED",
+  REJECTED = "REJECTED",
+  PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
+}
+
 const consignmentAPI = {
   getConsignmentDetails: async (
     consignmentId: number,
@@ -71,6 +79,40 @@ const consignmentAPI = {
         message: "Failed to create consignment. Please try again.",
       };
     }
+  },
+
+  updateConsignmentStatus: async (
+    consignmentId: number,
+    newStatus: ConsignmentStatus,
+  ): Promise<ApiResponse<void>> => {
+    try {
+      const response = await axiosClient.put<ApiResponse<void>>(
+        `/nurture-consignments/${consignmentId}/status`,
+        null,
+        {
+          params: {
+            newStatus: newStatus,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating consignment status:", error);
+      return {
+        isSuccess: false,
+        data: null,
+        message: "Failed to update consignment status. Please try again.",
+      };
+    }
+  },
+
+  cancelConsignment: async (
+    consignmentId: number,
+  ): Promise<ApiResponse<void>> => {
+    return consignmentAPI.updateConsignmentStatus(
+      consignmentId,
+      ConsignmentStatus.CANCELED,
+    );
   },
 };
 
