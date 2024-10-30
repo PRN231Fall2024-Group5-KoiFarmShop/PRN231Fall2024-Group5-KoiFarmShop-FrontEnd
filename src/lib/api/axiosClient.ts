@@ -2,6 +2,7 @@ import axios from "axios";
 
 const axiosClient = axios.create({
   baseURL: "https://koi-api.uydev.id.vn/api/v1/",
+  // baseURL: "http://localhost:5006/api/v1/",
   headers: {
     "Content-Type": "application/json",
   },

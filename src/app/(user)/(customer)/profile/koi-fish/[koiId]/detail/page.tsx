@@ -121,7 +121,11 @@ function MyKoiFishDetail() {
                   {koiFish.koiFishImages.map((image, index) => (
                     <Image
                       key={image.id}
-                      src={image.imageUrl}
+                      src={
+                        image.imageUrl.trim().length > 0
+                          ? image.imageUrl
+                          : "/images/no-image.png"
+                      }
                       alt={`${koiFish.name} ${index + 1}`}
                       width={300}
                       height={200}
@@ -220,7 +224,13 @@ function MyKoiFishDetail() {
                         {cert.certificateType}
                       </h3>
                       <Image
-                        src={cert.certificateUrl}
+                        src={
+                          (cert.certificateUrl.trim().length > 0 &&
+                            cert.certificateUrl.startsWith("http")) ||
+                          cert.certificateUrl.startsWith("/")
+                            ? cert.certificateUrl
+                            : "/images/no-image.png"
+                        }
                         alt={cert.certificateType}
                         width={300}
                         height={200}

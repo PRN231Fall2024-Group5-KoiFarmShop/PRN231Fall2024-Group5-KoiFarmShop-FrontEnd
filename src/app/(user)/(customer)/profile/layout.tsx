@@ -18,6 +18,11 @@ const sidebarItems = [
       pathname === "/profile/koi-fish" || pathname.includes("/koi-fish/"),
   },
   {
+    name: "Request for Sale",
+    href: "/profile/request-for-sale",
+    isActive: (pathname: string) => pathname === "/profile/request-for-sale",
+  },
+  {
     name: "Order History",
     href: "/profile/order-history",
     isActive: (pathname: string) => pathname === "/profile/order-history",
