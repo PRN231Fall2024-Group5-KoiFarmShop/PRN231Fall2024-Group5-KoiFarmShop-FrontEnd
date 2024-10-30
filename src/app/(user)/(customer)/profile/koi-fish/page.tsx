@@ -121,6 +121,14 @@ function MyKoiFishPage() {
     router.push(`/profile/koi-fish/${fishId}/detail`);
   };
 
+  const handleKoiCertificate = (fishId: number) => {
+    router.push(`/profile/koi-fish/${fishId}/certificate`);
+  };
+
+  const handleRequestForSale = (fishId: number) => {
+    router.push(`/profile/koi-fish/${fishId}/request-for-sale`);
+  };
+
   const getConsignmentStatus = (fish: KoiFish) => {
     if (!fish.consignments || fish.consignments.length === 0) {
       return "Not Consigned";
@@ -232,6 +240,16 @@ function MyKoiFishPage() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleUpdateKoi(fish.id)}>
                       Update Koi
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleKoiCertificate(fish.id)}
+                    >
+                      Koi Certificate
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleRequestForSale(fish.id)}
+                    >
+                      Request for Sale
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
