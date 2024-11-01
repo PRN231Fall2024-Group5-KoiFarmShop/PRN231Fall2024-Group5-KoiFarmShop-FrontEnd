@@ -9,7 +9,7 @@ import {
   CartItem,
 } from "@/lib/cart";
 import koiFishApi from "@/lib/api/koiFishApi";
-import koiDietApi, { KoiDiet } from "@/lib/api/koiDiet";
+import koiDietApi, { KoiDiet } from "@/lib/api/koiDietAPI";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, CheckCircle, XCircle, ChevronDown } from "lucide-react";
@@ -354,7 +354,7 @@ export default function CartPage() {
                 <div className="mb-2 flex w-full flex-1 items-center pr-2 md:mb-0 md:w-2/5">
                   <Image
                     src={
-                      item.koiFishImages[0]?.imageUrl ??
+                      item.koiFishImages?.[0]?.imageUrl ??
                       "/koi-farm-generic-koi-thumbnail.jpg"
                     }
                     alt={item.name}

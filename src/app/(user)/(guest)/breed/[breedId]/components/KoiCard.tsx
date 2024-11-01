@@ -22,14 +22,12 @@ const KoiCard: React.FC<KoiCardProps> = ({ koi }) => {
     });
   };
 
-  console.log(koi);
-
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-primary bg-white shadow">
       <div className="relative aspect-[3/4] w-full">
         <Image
           src={
-            koi.koiFishImages[0]?.imageUrl ||
+            koi.koiFishImages?.[0]?.imageUrl ||
             "/koi-farm-generic-koi-thumbnail.jpg"
           }
           alt={koi.name}
