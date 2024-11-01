@@ -30,7 +30,7 @@ export interface KoiFishCreate {
   lastHealthCheck: string;
   koiBreedIds: number[];
   imageUrls: string[];
-  ownerId: string;
+  ownerId: number | null;
   certificates?: KoiFishCertificate[];
 }
 
@@ -202,6 +202,21 @@ export interface KoiFishQueryParams {
 interface ODataResponse<T> {
   value: T[];
   "@odata.count"?: number;
+}
+
+// Add this interface for manager query params
+export interface KoiFishManagerQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
+  koiBreedId?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: string;
+  isAvailableForSale?: boolean;
+  isSold?: boolean;
+  isConsigned?: boolean;
+  showFarmOwned?: boolean;
 }
 
 const mapOdataToKoiFish = (odataKoi: KoiFishOdata): KoiFish => ({
@@ -579,6 +594,86 @@ const koiFishApi = {
         isSuccess: false,
         data: null,
         message: "Failed to fetch koi fish detail",
+      };
+    }
+  },
+
+  // Add this function to koiFishApi object
+  getKoiFishForManager: async (
+    params: KoiFishManagerQueryParams = {},
+  ): Promise<ApiResponse<KoiFish[]>> => {
+    let baseFilter = "1 eq 1"; // Always true condition to start with
+
+    baseFilter += " and IsDeleted eq false";
+    // Add ownership filter
+    if (params.showFarmOwned) {
+      baseFilter += " and OwnerId eq null"; // Farm-owned fish
+    } else {
+      baseFilter += " and OwnerId ne null"; // User-owned fish
+    }
+
+    // Build filter string
+    if (params.searchTerm) {
+      baseFilter += ` and contains(Name, '${params.searchTerm}')`;
+    }
+    if (params.koiBreedId) {
+      baseFilter += ` and KoiBreeds/any(kb: kb/Id eq ${params.koiBreedId})`;
+    }
+    if (params.minPrice) {
+      baseFilter += ` and Price ge ${params.minPrice}`;
+    }
+    if (params.maxPrice) {
+      baseFilter += ` and Price le ${params.maxPrice}`;
+    }
+    if (params.isAvailableForSale !== undefined) {
+      baseFilter += ` and IsAvailableForSale eq ${params.isAvailableForSale}`;
+    }
+    if (params.isSold !== undefined) {
+      baseFilter += ` and IsSold eq ${params.isSold}`;
+    }
+    if (params.isConsigned !== undefined) {
+      baseFilter += ` and IsConsigned eq ${params.isConsigned}`;
+    }
+
+    let query = `/odata/koi-fishes?$filter=${encodeURIComponent(baseFilter)}`;
+
+    // Add $expand to include related entities
+    query += "&$expand=KoiBreeds,KoiFishImages,KoiCertificates";
+
+    // Add pagination
+    if (params.pageNumber && params.pageSize) {
+      query += `&$skip=${(params.pageNumber - 1) * params.pageSize}&$top=${params.pageSize}`;
+    }
+
+    // Add sorting
+    if (params.sortBy) {
+      query += `&$orderby=${encodeURIComponent(params.sortBy)}`;
+    }
+
+    try {
+      const response =
+        await axiosClient.get<ODataResponse<KoiFishOdata>>(query);
+      const totalCount =
+        response.data["@odata.count"] || response.data.value.length;
+      const mappedData = response.data.value.map(mapOdataToKoiFish);
+
+      return {
+        isSuccess: true,
+        data: mappedData,
+        message: "Success",
+        metadata: {
+          currentPage: params.pageNumber || 1,
+          pageSize: params.pageSize || response.data.value.length,
+          totalCount: totalCount,
+          totalPages: Math.ceil(totalCount / (params.pageSize || 10)),
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching koi fish:", error);
+      return {
+        isSuccess: false,
+        data: [],
+        message: "Failed to fetch koi fish",
       };
     }
   },
