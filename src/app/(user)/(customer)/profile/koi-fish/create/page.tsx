@@ -45,8 +45,8 @@ const fishSchema = z.object({
   origin: z.string().min(1, "Origin is required"),
   gender: z.boolean(),
   dob: z.string().min(1, "Date of birth is required"),
-  length: z.number().min(0, "Length must be a positive number").nullable(),
-  weight: z.number().min(0, "Weight must be a positive number").nullable(),
+  length: z.number().min(4, "Fish must be at least 4 cm long"),
+  weight: z.number().min(10, "Weight must be at least 10 g"),
   personalityTraits: z.string().optional(),
   dailyFeedAmount: z
     .number()
@@ -86,8 +86,8 @@ export default function CreateKoiFishPage() {
       origin: "",
       gender: true,
       dob: "",
-      length: null,
-      weight: null,
+      length: 4,
+      weight: 10,
       personalityTraits: "",
       dailyFeedAmount: null,
       lastHealthCheck: "",
