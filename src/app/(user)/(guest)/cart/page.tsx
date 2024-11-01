@@ -354,8 +354,9 @@ export default function CartPage() {
                 <div className="mb-2 flex w-full flex-1 items-center pr-2 md:mb-0 md:w-2/5">
                   <Image
                     src={
-                      item.koiFishImages?.[0]?.imageUrl ??
-                      "/koi-farm-generic-koi-thumbnail.jpg"
+                      item.koiFishImages?.[0]?.imageUrl.length > 0
+                        ? item.koiFishImages[0].imageUrl
+                        : "/koi-farm-generic-koi-thumbnail.jpg"
                     }
                     alt={item.name}
                     width={50}
