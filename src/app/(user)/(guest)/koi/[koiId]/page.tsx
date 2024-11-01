@@ -22,6 +22,7 @@ import PolicyGuide from "./components/PolicyGuide";
 import { addToCart } from "@/lib/cart";
 import { useToast } from "@/hooks/use-toast";
 import { formatPriceVND, formatDate } from "@/lib/utils";
+import { User } from "@/lib/api/userAPI";
 
 const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
   const { koiId } = params;
@@ -31,6 +32,14 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   useEffect(() => {
     const fetchKoiDetails = async () => {
@@ -69,6 +78,16 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
         description: `${koiDetails.name} has been added to your cart.`,
       });
     }
+  };
+  const isFishAvailableForSale = koiDetails.isAvailableForSale;
+  const isFishOwnedByCurrentUser = user
+    ? user?.id === koiDetails.ownerId
+    : false;
+
+  const getBtnText = () => {
+    if (!isFishAvailableForSale) return "Not Available";
+    if (isFishOwnedByCurrentUser) return "Owned";
+    return "Add to Cart";
   };
 
   return (
@@ -176,10 +195,10 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
             </div>
             <Button
               className="mt-6 bg-red-600 text-white hover:bg-red-700"
-              disabled={!koiDetails.isAvailableForSale}
+              disabled={!isFishAvailableForSale || isFishOwnedByCurrentUser}
               onClick={handleAddToCart}
             >
-              {koiDetails.isAvailableForSale ? "Add to Cart" : "Not Available"}
+              {getBtnText()}
             </Button>
           </div>
         </div>

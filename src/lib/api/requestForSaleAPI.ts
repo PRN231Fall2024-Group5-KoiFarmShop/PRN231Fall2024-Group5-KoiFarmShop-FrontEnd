@@ -32,7 +32,11 @@ export interface RequestForSale {
   deletedAt: string | null;
   deletedBy: number | null;
   isDeleted: boolean;
-  user?: User;
+  user?: {
+    id: number;
+    fullName: string;
+    email: string;
+  };
   koiFish?: {
     id: number;
     name: string;
@@ -74,6 +78,11 @@ interface RequestForSaleOData {
   DeletedBy: number | null;
   IsDeleted: boolean;
   KoiFish?: KoiFishOData;
+  User?: {
+    Id: number;
+    FullName: string;
+    Email: string;
+  };
 }
 
 // Interface for API response
@@ -174,6 +183,13 @@ const mapODataToRequestForSale = (
   deletedBy: odata.DeletedBy,
   isDeleted: odata.IsDeleted,
   koiFish: odata.KoiFish ? mapODataToKoiFish(odata.KoiFish) : undefined,
+  user: odata.User
+    ? {
+        id: odata.User.Id,
+        fullName: odata.User.FullName,
+        email: odata.User.Email,
+      }
+    : undefined,
 });
 
 const requestForSaleApi = {
@@ -244,6 +260,76 @@ const requestForSaleApi = {
   cancel: async (id: number): Promise<ApiResponse<RequestForSale>> => {
     const response = await axiosClient.put<ApiResponse<RequestForSale>>(
       `/RequestForSale/${id}/cancel`,
+    );
+    return response.data;
+  },
+
+  // Add this new method for fetching all requests
+  getAllRequestForSales: async (
+    params: RequestForSaleQueryParams = {},
+  ): Promise<ODataResponse<RequestForSale>> => {
+    try {
+      let query = "/odata/request-for-sales?$expand=KoiFish,User";
+
+      // Add filters if provided
+      let filters = [];
+
+      if (params.searchTerm) {
+        filters.push(
+          `contains(Note, '${encodeURIComponent(params.searchTerm)}')`,
+        );
+      }
+
+      if (params.status) {
+        filters.push(`RequestStatus eq '${params.status}'`);
+      }
+
+      if (filters.length > 0) {
+        query += `&$filter=${filters.join(" and ")}`;
+      }
+
+      // Add pagination parameters if provided
+      if (params.pageNumber && params.pageSize) {
+        const skipParam = `$skip=${(params.pageNumber - 1) * params.pageSize}`;
+        const topParam = `$top=${params.pageSize}`;
+        query += `&${skipParam}&${topParam}`;
+      }
+
+      // Add sorting if provided
+      if (params.sortBy) {
+        const orderByParam = `$orderby=${encodeURIComponent(params.sortBy)}`;
+        query += `&${orderByParam}`;
+      }
+
+      const response =
+        await axiosClient.get<ODataResponse<RequestForSaleOData>>(query);
+
+      return {
+        "@odata.context": response.data["@odata.context"],
+        "@odata.count": response.data["@odata.count"],
+        value: response.data.value.map(mapODataToRequestForSale),
+      };
+    } catch (error) {
+      console.error("Error fetching all request for sales:", error);
+      return { value: [] };
+    }
+  },
+
+  // Add methods for approving and rejecting requests
+  approve: async (id: number): Promise<ApiResponse<RequestForSale>> => {
+    const response = await axiosClient.put<ApiResponse<RequestForSale>>(
+      `/RequestForSale/${id}/approve`,
+    );
+    return response.data;
+  },
+
+  reject: async (
+    id: number,
+    // reason?: string,
+  ): Promise<ApiResponse<RequestForSale>> => {
+    const response = await axiosClient.put<ApiResponse<RequestForSale>>(
+      `/RequestForSale/${id}/reject`,
+      // { reason },
     );
     return response.data;
   },
