@@ -9,7 +9,7 @@ import {
   CartItem,
 } from "@/lib/cart";
 import koiFishApi from "@/lib/api/koiFishApi";
-import koiDietApi, { KoiDiet } from "@/lib/api/koiDiet";
+import koiDietApi, { KoiDiet } from "@/lib/api/koiDietAPI";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, CheckCircle, XCircle, ChevronDown } from "lucide-react";

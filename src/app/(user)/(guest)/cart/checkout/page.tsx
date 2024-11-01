@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCart, CartItem, clearCart } from "@/lib/cart";
 import koiFishApi from "@/lib/api/koiFishApi";
-import koiDietApi, { KoiDiet } from "@/lib/api/koiDiet";
+import koiDietApi, { KoiDiet } from "@/lib/api/koiDietAPI";
 import orderAPI, { createOrderDataFromCart } from "@/lib/api/orderAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

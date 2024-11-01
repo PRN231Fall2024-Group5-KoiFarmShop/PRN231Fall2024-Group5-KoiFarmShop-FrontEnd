@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import koiFishApi from "@/lib/api/koiFishApi";
-import koiDietApi from "@/lib/api/koiDiet";
+import koiDietApi from "@/lib/api/koiDietAPI";
 import consignmentAPI from "@/lib/api/consignmentAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
