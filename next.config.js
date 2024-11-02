@@ -9,7 +9,7 @@ const config = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
-      { protocol: "https", hostname: "www.kodamakoifarm.com" },
+      { protocol: "https", hostname: "*" },
     ],
   },
 };

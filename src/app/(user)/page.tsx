@@ -1,29 +1,34 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Key, NotebookPen, Search } from "lucide-react";
 import Image from "next/image";
 
 export default function HomePage() {
+  const token = localStorage.getItem("jwt");
+  const isLoggedIn = !!token;
+
   return (
     <main className="flex flex-col items-center justify-center">
       {/* Call to Action Section */}
       <section className="flex h-[70vh] w-full flex-col items-center justify-center bg-[url('/koi-farm-hero-bg.jpg')] bg-cover bg-center py-20 text-white">
         <div className="container text-center">
           <h1 className="mb-6 text-5xl font-bold">Welcome to KoiWorld Farm</h1>
-          <div className="flex justify-center space-x-4">
-            <div className="flex w-1/2 flex-row justify-end">
-              <Link href="/search">
-                <Button
-                  variant="default"
-                  size="lg"
-                  className="hover:bg-primary hover:opacity-90"
-                >
-                  View Koi for Sale
-                </Button>
-              </Link>
-            </div>
-
-            <div className="flex w-1/2 flex-row justify-start">
+          <div className="flex items-center justify-center space-x-4">
+            {/* <div className="flex w-1/2 flex-row justify-end"> */}
+            <Link href="/search">
+              <Button
+                variant="default"
+                size="lg"
+                className="hover:bg-primary hover:opacity-90"
+              >
+                View Koi for Sale
+              </Button>
+            </Link>
+            {/* </div> */}
+            {!isLoggedIn && (
+              // <div className="flex w-1/2 flex-row justify-start">
               <Link href="/login">
                 <Button
                   variant="secondary"
@@ -33,7 +38,8 @@ export default function HomePage() {
                   Login
                 </Button>
               </Link>
-            </div>
+              // </div>
+            )}
           </div>
         </div>
       </section>

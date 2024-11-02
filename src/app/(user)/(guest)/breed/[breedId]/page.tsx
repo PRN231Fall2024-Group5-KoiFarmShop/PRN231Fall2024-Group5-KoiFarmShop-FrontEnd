@@ -32,6 +32,7 @@ import koiFishApi, {
   KoiFish,
 } from "@/lib/api/koiFishApi";
 import koiBreedApi from "@/lib/api/koiBreedApi";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -46,10 +47,14 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
   const [sortOption, setSortOption] = useState<string>("newest");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [pageSize] = useState(9);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [allKoiFish, setAllKoiFish] = useState<KoiFish[]>([]);
 
   useEffect(() => {
     const fetchBreedAndKois = async () => {
       try {
+        setIsLoading(true);
         // Fetch breed details
         const breedResponse = await koiBreedApi.getById(parseInt(breedId));
         if (breedResponse.isSuccess) {
@@ -61,14 +66,14 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
         // Fetch available kois for this breed
         const koiParams: KoiFishQueryParams = {
           koiBreedId: parseInt(breedId),
-          pageNumber: currentPage,
-          pageSize: ITEMS_PER_PAGE,
+          // pageNumber: currentPage,
+          // pageSize: ITEMS_PER_PAGE,
           searchTerm: searchTerm,
         };
         const koiResponse = await koiFishApi.getAvailableKoiByBreed(koiParams);
         if (koiResponse.isSuccess) {
-          setKois(koiResponse.data);
-          setTotalPages(koiResponse.metadata?.totalPages || 1);
+          setAllKoiFish(koiResponse.data);
+          setTotalPages(Math.ceil(koiResponse.data.length / pageSize));
         } else {
           setError(koiResponse.message);
         }
@@ -112,13 +117,21 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
     }
   });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  const getCurrentPageItems = (): KoiFish[] => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return allKoiFish.slice(startIndex, endIndex);
+  };
 
-  if (error || !breed) {
-    return <div>Error: {error || "Breed not found"}</div>;
-  }
+  const handlePageChange = async (newPage: number) => {
+    setPageLoading(true);
+    setCurrentPage(newPage);
+
+    // Add delay for smooth transition
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    setPageLoading(false);
+  };
 
   // Static FAQ data
   const staticFAQs = [
@@ -138,10 +151,6 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
         "With proper care and optimal living conditions, this koi breed can live between 25-35 years. Some exceptional specimens have been known to live even longer, up to 50 years or more in rare cases.",
     },
   ];
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   // Function to generate page numbers
   const getPageNumbers = () => {
@@ -177,6 +186,14 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
 
     return pageNumbers;
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error || !breed) {
+    return <div>Error: {error || "Breed not found"}</div>;
+  }
 
   return (
     <div className="min-h-screen">
@@ -235,46 +252,66 @@ const KoiBreedShowcasePage = ({ params }: { params: { breedId: string } }) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {kois.map((koi) => (
-              <KoiCard key={koi.id} koi={koi} />
-            ))}
-          </div>
-          {/* Pagination */}
-          <div className="mt-8 flex justify-center">
-            <Pagination className="cursor-default">
-              <PaginationContent>
-                <PaginationItem>
-                  {currentPage !== 1 && (
-                    <PaginationPrevious
-                      onClick={() => handlePageChange(currentPage - 1)}
-                    />
-                  )}
-                </PaginationItem>
-                {getPageNumbers().map((pageNumber, index) => (
-                  <PaginationItem key={index}>
-                    {pageNumber === "..." ? (
-                      <PaginationEllipsis />
-                    ) : (
-                      <PaginationLink
-                        onClick={() => handlePageChange(pageNumber as number)}
-                        isActive={currentPage === pageNumber}
-                      >
-                        {pageNumber}
-                      </PaginationLink>
-                    )}
-                  </PaginationItem>
+          {isLoading || pageLoading ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[...Array(pageSize)].map((_, i) => (
+                <Skeleton
+                  key={i}
+                  className="h-60 w-full rounded-md bg-gray-300"
+                />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {getCurrentPageItems().map((koi) => (
+                  <KoiCard key={koi.id} koi={koi} />
                 ))}
-                <PaginationItem>
-                  {currentPage !== totalPages && (
-                    <PaginationNext
-                      onClick={() => handlePageChange(currentPage + 1)}
-                    />
-                  )}
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
+              </div>
+
+              {!isLoading && allKoiFish.length > 0 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        {currentPage !== 1 && (
+                          <PaginationPrevious
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            // disabled={pageLoading}
+                          />
+                        )}
+                      </PaginationItem>
+                      {getPageNumbers().map((pageNumber, index) => (
+                        <PaginationItem key={index}>
+                          {pageNumber === "..." ? (
+                            <PaginationEllipsis />
+                          ) : (
+                            <PaginationLink
+                              onClick={() =>
+                                handlePageChange(pageNumber as number)
+                              }
+                              isActive={currentPage === pageNumber}
+                              // disabled={pageLoading}
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          )}
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        {currentPage !== totalPages && (
+                          <PaginationNext
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            // disabled={pageLoading}
+                          />
+                        )}
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
