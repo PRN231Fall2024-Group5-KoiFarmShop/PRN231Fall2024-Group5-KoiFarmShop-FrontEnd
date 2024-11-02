@@ -123,8 +123,21 @@ export default function CheckoutPage() {
     }
 
     const walletResponse = await walletAPI.getCurrentUserWallet();
+
     if (!walletResponse.isSuccess) {
       throw new Error("Failed to initialize wallet");
+    }
+
+    if (
+      walletResponse?.data?.balance &&
+      walletResponse?.data?.balance < subtotal
+    ) {
+      toast({
+        title: "Error",
+        description: "Insufficient balance in wallet",
+        variant: "destructive",
+      });
+      return;
     }
 
     const orderData = createOrderDataFromCart(
@@ -141,8 +154,9 @@ export default function CheckoutPage() {
           description: "Your order has been successfully placed.",
         });
         clearCart();
-        router.push("/order-success");
+        router.push("/profile/order-history");
       } else {
+        console.log(response);
         toast({
           title: "Error",
           description:
@@ -206,8 +220,9 @@ export default function CheckoutPage() {
               <div className="flex items-center">
                 <Image
                   src={
-                    item.koiFishImages[0]?.imageUrl ??
-                    "/koi-farm-generic-koi-thumbnail.jpg"
+                    item.koiFishImages?.[0]?.imageUrl?.length > 0
+                      ? item.koiFishImages?.[0]?.imageUrl
+                      : "/koi-farm-generic-koi-thumbnail.jpg"
                   }
                   alt={item.name}
                   width={50}

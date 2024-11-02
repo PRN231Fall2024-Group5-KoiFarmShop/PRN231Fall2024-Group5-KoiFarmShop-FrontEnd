@@ -393,10 +393,10 @@ const koiFishApi = {
       return { isSuccess: false, data: [], message: "Too many IDs requested" };
     }
     const idsString = ids.join(",");
-    const query = `/odata/koi-fishes?$filter=id in (${idsString})`;
+    const query = `/odata/koi-fishes?$filter=id in (${idsString})&$expand=KoiBreeds,KoiFishImages`;
     try {
       const response = await axiosClient.get<{ value: KoiFishOdata[] }>(query);
-      console.log(response.data.value.map(mapOdataToKoiFish));
+
       return {
         isSuccess: true,
         data: response.data.value.map(mapOdataToKoiFish),
