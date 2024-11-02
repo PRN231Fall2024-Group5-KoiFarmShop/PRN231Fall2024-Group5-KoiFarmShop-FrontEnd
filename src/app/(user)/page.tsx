@@ -4,10 +4,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Key, NotebookPen, Search } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const token = localStorage.getItem("jwt");
-  const isLoggedIn = !!token;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwt");
+    setIsLoggedIn(!!token);
+  }, []);
 
   return (
     <main className="flex flex-col items-center justify-center">
