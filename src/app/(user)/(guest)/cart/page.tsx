@@ -226,10 +226,6 @@ export default function CartPage() {
       ? "Failed to fetch data. Please try again."
       : null;
 
-  console.log(cartItems.length);
-  console.log(koiDetails);
-  console.log(diets);
-
   const isConsignmentConfigValid = (config: ConsignmentConfig | undefined) => {
     if (!config) return false;
     return (

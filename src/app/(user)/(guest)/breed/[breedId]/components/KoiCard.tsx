@@ -27,8 +27,10 @@ const KoiCard: React.FC<KoiCardProps> = ({ koi }) => {
       <div className="relative aspect-[3/4] w-full">
         <Image
           src={
-            koi.koiFishImages?.[0]?.imageUrl ||
-            "/koi-farm-generic-koi-thumbnail.jpg"
+            koi.koiFishImages?.[0]?.imageUrl?.length > 0 &&
+            koi.koiFishImages?.[0]?.imageUrl.startsWith("https://")
+              ? koi.koiFishImages?.[0]?.imageUrl
+              : "/koi-farm-generic-koi-thumbnail.jpg"
           }
           alt={koi.name}
           fill

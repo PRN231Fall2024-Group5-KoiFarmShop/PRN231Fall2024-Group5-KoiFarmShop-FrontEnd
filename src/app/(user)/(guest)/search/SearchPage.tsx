@@ -28,6 +28,9 @@ import {
 } from "@/components/ui/breadcrumb";
 import koiFishApi, { KoiFish, KoiFishQueryParams } from "@/lib/api/koiFishApi";
 import koiBreedApi, { KoiBreed } from "@/lib/api/koiBreedApi";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -60,6 +63,9 @@ const SearchPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [pageSize] = useState(ITEMS_PER_PAGE);
+  const [pageLoading, setPageLoading] = useState(false);
+
   useEffect(() => {
     const fetchBreeds = async () => {
       try {
@@ -91,8 +97,8 @@ const SearchPage = () => {
         filter += `Price ge ${priceRange.min} and Price le ${priceRange.max}`;
 
         const params: KoiFishQueryParams = {
-          pageNumber: currentPage,
-          pageSize: ITEMS_PER_PAGE,
+          // pageNumber: currentPage,
+          // pageSize: ITEMS_PER_PAGE,
           sortBy: sortOption,
           searchTerm: filter,
         };
@@ -194,6 +200,22 @@ const SearchPage = () => {
     return pageNumbers;
   };
 
+  const handlePageChangeAsync = async (newPage: number) => {
+    setPageLoading(true);
+    setCurrentPage(newPage);
+
+    // Add delay for smooth transition
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    setPageLoading(false);
+  };
+
+  const getCurrentPageItems = (): KoiFish[] => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return kois.slice(startIndex, endIndex);
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -283,46 +305,66 @@ const SearchPage = () => {
             />
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {kois.map((koi) => (
-            <KoiCard key={koi.id} koi={koi} />
-          ))}
-        </div>
-        {/* Pagination */}
-        <div className="mt-8 flex justify-center">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                {currentPage !== 1 && (
-                  <PaginationPrevious
-                    onClick={() => handlePageChange(currentPage - 1)}
-                  />
-                )}
-              </PaginationItem>
-              {getPageNumbers().map((pageNumber, index) => (
-                <PaginationItem key={index}>
-                  {pageNumber === "..." ? (
-                    <PaginationEllipsis />
-                  ) : (
-                    <PaginationLink
-                      onClick={() => handlePageChange(pageNumber as number)}
-                      isActive={currentPage === pageNumber}
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  )}
-                </PaginationItem>
+        {isLoading || pageLoading ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(pageSize)].map((_, i) => (
+              <Skeleton
+                key={i}
+                className="h-60 w-full rounded-md bg-gray-300"
+              />
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {getCurrentPageItems().map((koi) => (
+                <KoiCard key={koi.id} koi={koi} />
               ))}
-              <PaginationItem>
-                {currentPage !== totalPages && (
-                  <PaginationNext
-                    onClick={() => handlePageChange(currentPage + 1)}
-                  />
-                )}
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+            </div>
+
+            {!isLoading && kois.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      {currentPage !== 1 && (
+                        <PaginationPrevious
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          // disabled={pageLoading}
+                        />
+                      )}
+                    </PaginationItem>
+                    {getPageNumbers().map((pageNumber, index) => (
+                      <PaginationItem key={index}>
+                        {pageNumber === "..." ? (
+                          <PaginationEllipsis />
+                        ) : (
+                          <PaginationLink
+                            onClick={() =>
+                              handlePageChange(pageNumber as number)
+                            }
+                            isActive={currentPage === pageNumber}
+                            // disabled={pageLoading}
+                          >
+                            {pageNumber}
+                          </PaginationLink>
+                        )}
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      {currentPage !== totalPages && (
+                        <PaginationNext
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          // disabled={pageLoading}
+                        />
+                      )}
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
