@@ -77,6 +77,11 @@ export const STAFF_SIDEBAR = [
   },
   {
     icon: "Package",
+    name: "Your Tasks",
+    href: "/staff/order-details",
+  },
+  {
+    icon: "Package",
     name: "Manage Fish",
     href: "#",
   },
