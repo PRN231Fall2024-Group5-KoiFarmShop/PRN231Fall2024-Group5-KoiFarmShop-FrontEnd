@@ -17,32 +17,47 @@ import { useForm } from "react-hook-form";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadImage } from "@/lib/configs/firebase";
-import authAPI from "@/lib/api/authAPI";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import axiosClient from "@/lib/api/axiosClient";
+import axios from "axios";
 
 // Extend schema for confirmPassword validation
 const formRegisterSchema = z.object({
-  email: z.string().min(3, {
-    message: "Email must be at least 3 characters long",
-  }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters long",
-  }),
-  confirmPassword: z.string().min(6, {
-    message: "Confirm password must be at least 6 characters long",
-  }),
-  fullName: z.string().min(3, {
-    message: "Full name must be at least 3 characters long",
-  }),
-  dob: z.string(),
-  phoneNumber: z.string(),
-  imageUrl: z.string(),
-  address: z.string(),
+  email: z.string()
+    .min(3, { message: "Email must be at least 3 characters long" })
+    .email({ message: "Invalid email format" }),
+  
+  password: z.string()
+    .min(6, { message: "Password must be at least 6 characters long" }),
+  
+  confirmPassword: z.string()
+    .min(6, { message: "Confirm password must be at least 6 characters long" }),
+  
+  fullName: z.string()
+    .min(3, { message: "Full name must be at least 3 characters long" }),
+  
+  dob: z.string()
+    .refine(value => {
+      const date = new Date(value);
+      const age = new Date().getFullYear() - date.getFullYear();
+      return !isNaN(date.getTime()) && age >= 18;
+    }, { message: "You must be at least 18 years old" }),
+  
+  phoneNumber: z.string()
+    .regex(/^\d{10}$/, { message: "Phone number must be 10 digits long" }),
+  
+  imageUrl: z.string()
+    .url({ message: "Invalid URL format for image" })
+    .optional(),
+  
+  address: z.string()
+    .min(5, { message: "Address must be at least 5 characters long" }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"], // Field to display the error
 });
+
 
 function RegisterForm() {
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null); // State to hold avatar preview URL
@@ -75,37 +90,65 @@ function RegisterForm() {
   }
 
   async function onSubmit(values: z.infer<typeof formRegisterSchema>) {
-    authAPI
-      .register({
-        email: values.email,
-        password: values.password,
-        fullName: values.fullName,
-        dob: values.dob,
-        phoneNumber: values.phoneNumber,
-        imageUrl: values.imageUrl,
-        address: values.address,
-        roleName: "CUSTOMER",
-      })
-      .then(({ data }: any) => {
-        if (data.isSuccess) {
-          console.log("Register successful", data);
-          router.push("/login");
-        } else {
+    try {
+      const response = await axiosClient.post<any>(
+        "/users/register",
+        {
+          email: values.email,
+          password: values.password,
+          fullName: values.fullName,
+          dob: values.dob,
+          phoneNumber: values.phoneNumber,
+          imageUrl: values.imageUrl,
+          address: values.address,
+          roleName: "CUSTOMER",
+        }
+      )
+
+      if (response.status === 200) {
+        console.log("Register successful", response.data)
+        toast({
+          title: "Registration successful",
+          description: "You have successfully registered. Please login to continue.",
+          variant: "default",
+        })
+        router.push("/login")
+      } else {
+        // This block will handle any non-200 responses that weren't caught by the catch block
+        toast({
+          title: "Registration failed",
+          description: response.data.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Register failed", error)
+      
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 400) {
+          // Handle the specific 400 error case
           toast({
             title: "Registration failed",
-            description: data.message || "An error occurred during registration.",
-            variant: "destructive", // You can change the variant based on the use case
-          });
+            description: error.response.data.message || "User already exists",
+            variant: "destructive",
+          })
+        } else {
+          // Handle other error cases
+          toast({
+            title: "Error",
+            description: error.response?.data?.message || "An unexpected error occurred. Please try again.",
+            variant: "destructive",
+          })
         }
-      })
-      .catch((error) => {
-        console.error("Register failed", error);
+      } else {
+        // Handle non-Axios errors
         toast({
           title: "Error",
           description: "An unexpected error occurred. Please try again.",
           variant: "destructive",
-        });
-      });
+        })
+      }
+    }
   }
 
   return (
@@ -222,6 +265,12 @@ function RegisterForm() {
                   className="mt-4"
                   onChange={handleImageUpload}
                 />
+                {/* show error validation */}
+                {form.formState.errors.imageUrl && (
+                  <span className="text-red-500">
+                    {form.formState.errors.imageUrl.message}
+                  </span>
+                )}
               </div>
               <FormField
                 control={form.control}
@@ -292,6 +341,7 @@ function RegisterSection() {
     </section>
   );
 }
+
 
 function RegisterPage() {
   return (

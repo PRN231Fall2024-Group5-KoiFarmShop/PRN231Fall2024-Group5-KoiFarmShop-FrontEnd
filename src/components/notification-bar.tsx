@@ -1,7 +1,6 @@
 "use client";
 
-import { BellIcon, LifeBuoy } from "lucide-react";
-
+import { BellIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -14,149 +13,124 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import * as signalR from "@microsoft/signalr";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import axios from "axios";
 
 interface Notification {
-    Title: string;
-    Body: string;
-    UserId: string;
-    IsRead: boolean;
-    Url: string;
-    Sender: string;
-    CreatedAt: Date;
+    title: string;
+    body: string;
+    url: string;
+    receiverId: number;
+    type: string;
+    isRead: boolean;
+    id: number;
+    createdAt: string;
+    createdBy: number;
+    modifiedAt?: string | null;
+    modifiedBy?: number | null;
+    deletedAt?: string | null;
+    deletedBy?: number | null;
+    isDeleted: boolean;
 }
 
 export default function NotificationBar() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadNumber, setUnreadNumber] = useState(0);
 
-  //const {notifications, refetch} = useNotification();
+  const fetchNotifications = async () => {
+    const { data } = await axios.get("https://koi-api.uydev.id.vn/api/v1/notifications", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    });
 
+    setNotifications(data?.data);
+  };
 
-  //Mock
-  const notifications: Notification[] = [
-    {
-      Title: "New User",
-      Body: "New user has been added",
-      UserId: "1",
-      IsRead: false,
-      Url: "/user",
-      Sender: "System",
-      CreatedAt: new Date()
-    },
-    {
-      Title: "New User",
-      Body: "New user has been added",
-      UserId: "1",
-      IsRead: false,
-      Url: "/user",
-      Sender: "System",
-      CreatedAt: new Date()
-    },
-    {
-      Title: "New User",
-      Body: "New user has been added",
-      UserId: "1",
-      IsRead: false,
-      Url: "/user",
-      Sender: "System",
-      CreatedAt: new Date()
-    },
-  ];
-
-  console.log(notifications);
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
       .configureLogging(signalR.LogLevel.Debug)
-      .withUrl("https://ez-api.azurewebsites.net/notification-hub", {
+      .withUrl("https://koi-api.uydev.id.vn/notificationHub", {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets,
       })
       .build();
 
-    connection.start()
-    .then(() => {
-      console.log("Connection started")
-    //   console.log(authUser)
-    //   if(authUser){
-    //     connection.invoke("JoinRoom", authUser.RoleName)
-    //   }
-    })
-    .catch(() => console.log("Error connecting to SignalR"));
+    connection
+      .start()
+      .then(() => {
+        console.log("Connection started");
+      })
+      .catch((e) => console.log("Error connecting to SignalR", e));
 
-    connection.on("ReceiveNotification", (title, content) => {
-      console.log(title, content);
+    connection.on("ReceiveMessage", (title, content) => {
+      fetchNotifications();
       toast.info(`${title} - ${content}`);
     });
 
     return () => {
       connection.stop();
     };
-  }, [1]);
+  }, []);
+
+  useEffect(() => {
+    const unreadCount = notifications.filter((n) => !n.isRead).length;
+    setUnreadNumber(unreadCount);
+  }, [notifications]);
 
   return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="secondary" size="icon" className="rounded-full relative ml-auto">
-            <BellIcon className="h-5 w-5" />
-            <span className="absolute -top-1 -right-2 bg-red-500 text-background  h-6 w-6 items-center justify-center flex rounded-full select-none">
-              5
-            </span>
-            </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="w-96 shadow-2xl mr-6 mt-2"
-          side="bottom"
-          align="start"
-        >
-          <DropdownMenuLabel className="text-orange-500">
-            <Badge>Notification</Badge>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <ScrollArea className="h-96">
-            <div className="space-y-4">
-              {notifications.map((notification,index:number) => (
-                <NotificationItem key={index} notification={notification} />
-              ))}
-            </div>
-          </ScrollArea>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="secondary" size="icon" className="rounded-full relative ml-auto">
+          <BellIcon className="h-5 w-5" />
+          <span className="absolute -top-1 -right-2 bg-red-500 text-background h-6 w-6 items-center justify-center flex rounded-full select-none">
+            {unreadNumber}
+          </span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-96 shadow-2xl mr-6 mt-2" side="bottom" align="start">
+        <DropdownMenuLabel className="text-orange-500">
+          <Badge>Notification</Badge>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <ScrollArea className="h-96">
+          <div className="space-y-4">
+            {notifications.map((notification, index) => (
+              <NotificationItem key={index} notification={notification} />
+            ))}
+          </div>
+        </ScrollArea>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-// var newNotification = new Notification
-// {
-//     Title = notification.Title,
-//     Body = notification.Body,
-//     UserId = notification.UserId,
-//     IsRead = false,
-//     Url = notification.Url,
-//     Sender = notification.Sender ?? "System"
-// };
-
 function NotificationItem({ notification }: { notification: Notification }) {
-  //get current domain
   const domain = window.location.origin;
   console.log(domain);
   console.log(notification);
+
   return (
     <DropdownMenuItem>
       <div className="flex items-center gap-2">
         <Avatar>
           <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          <AvatarFallback>{notification.Sender}</AvatarFallback>
+          <AvatarFallback>{notification.createdBy ?? "Unknown"}</AvatarFallback>
         </Avatar>
         <div>
-          <div className="font-semibold">{notification.Title}</div>
-          <div className="line-clamp-2">
-            {notification.Body}
-          </div>
-          {/* at */}
+          <div className="font-semibold">{notification.title ?? "No Title"}</div>
+          <div className="line-clamp-2">{notification.body ?? "No Content"}</div>
           <div className="text-xs">
-            {formatDistanceToNow(new Date(notification.CreatedAt), { addSuffix: true })}
+            {notification.createdAt
+              ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })
+              : "Unknown time"}
           </div>
         </div>
       </div>

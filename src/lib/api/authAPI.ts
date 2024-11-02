@@ -1,6 +1,6 @@
 import axiosClient from "./axiosClient"; // Assuming you have this set up already
 interface ApiResponse<T> {
-  data: T;
+  data: T | null;
   message: string;
   isSuccess: boolean;
 }
@@ -75,21 +75,39 @@ const authAPI = {
     address: string;
     roleName: string;
   }): Promise<ApiResponse<RegisterResponse>> => {
-    const response = await axiosClient.post<ApiResponse<RegisterResponse>>(
-      "/users/register",
-      {
-        email,
-        password,
-        fullName,
-        dob,
-        phoneNumber,
-        imageUrl,
-        address,
-        roleName,
-      },
-    );
-    return response.data;
+    try {
+      const response = await axiosClient.post<ApiResponse<RegisterResponse>>(
+        "/users/register",
+        {
+          email,
+          password,
+          fullName,
+          dob,
+          phoneNumber,
+          imageUrl,
+          address,
+          roleName,
+        },
+      );
+      console.log(response)
+      return response.data;
+    } catch (error: any) {
+      console.log(error)
+      // Check if the error is a 400 response with a specific message
+      if (error.response && error.response.status === 400) {
+        const apiResponse = error.response.data as ApiResponse<RegisterResponse>;
+          return apiResponse
+        }
+      
+      // Handle other types of errors
+      return {
+        isSuccess: false,
+        data: null,
+        message: "An unexpected error occurred. Please try again later.",
+      };
+    }
   },
+  
 };
 
 export default authAPI;

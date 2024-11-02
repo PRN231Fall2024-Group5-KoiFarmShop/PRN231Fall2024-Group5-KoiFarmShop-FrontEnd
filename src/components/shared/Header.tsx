@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
+import NotificationBar from "../notification-bar";
 
 const Header = () => {
   const [koiBreeds, setKoiBreeds] = useState<KoiBreed[]>([]);
@@ -206,6 +207,9 @@ const Header = () => {
                   </NavigationMenuItem>
                 ))}
               </NavigationMenuList>
+              <div className="px-4">
+              <NotificationBar />
+              </div>
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
