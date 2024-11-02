@@ -51,7 +51,7 @@ function OrderHistoryPage() {
     setLoading(false);
 
     if (response.isSuccess && response.data) {
-      setOrders(response.data);
+      setOrders(response.data.reverse());
     } else {
       toast({
         title: "Error",

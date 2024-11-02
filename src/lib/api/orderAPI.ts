@@ -31,11 +31,12 @@ const orderAPI = {
         orderData,
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating order:", error);
       return {
         data: null,
-        message: "Failed to create order. Please try again.",
+        message:
+          error.response?.data || "Failed to create order. Please try again.",
         isSuccess: false,
       };
     }
