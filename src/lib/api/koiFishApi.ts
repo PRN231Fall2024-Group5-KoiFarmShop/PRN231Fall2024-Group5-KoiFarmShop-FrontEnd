@@ -477,7 +477,7 @@ const koiFishApi = {
     let query = `/odata/koi-fishes?$filter=${encodeURIComponent(baseFilter)}`;
 
     // Add $expand to include KoiBreeds
-    query += "&$expand=KoiBreeds";
+    query += "&$expand=KoiBreeds,KoiFishImages";
 
     // Add other query parameters
     if (params.pageNumber)

@@ -50,6 +50,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import Image from "next/image";
 
 export default function KoiFishManagementPage() {
   const router = useRouter();
@@ -166,7 +167,7 @@ export default function KoiFishManagementPage() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
+          <TableHead>Fish</TableHead>
           <TableHead>Breed</TableHead>
           <TableHead>Origin</TableHead>
           <TableHead>Gender</TableHead>
@@ -180,7 +181,18 @@ export default function KoiFishManagementPage() {
       <TableBody>
         {getCurrentPageItems().map((fish) => (
           <TableRow key={fish.id}>
-            <TableCell>{fish.name}</TableCell>
+            <TableCell className="flex items-center gap-2">
+              {fish.koiFishImages?.[0]?.imageUrl?.length > 0 &&
+                fish.koiFishImages?.[0]?.imageUrl?.startsWith("https://") && (
+                  <Image
+                    src={fish.koiFishImages?.[0]?.imageUrl}
+                    alt={fish.name}
+                    width={50}
+                    height={50}
+                  />
+                )}
+              {fish.name}
+            </TableCell>
             <TableCell>
               {fish.koiBreeds.map((breed) => breed.name).join(", ")}
             </TableCell>
