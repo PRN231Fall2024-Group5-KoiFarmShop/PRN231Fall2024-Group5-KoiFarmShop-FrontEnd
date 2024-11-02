@@ -57,7 +57,7 @@ export default function NotificationBar() {
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
       .configureLogging(signalR.LogLevel.Debug)
-      .withUrl("https://koi-api.uydev.id.vn/notificationHub", {
+      .withUrl("http://217.15.164.128:2000/notificationHub", {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets,
       })
