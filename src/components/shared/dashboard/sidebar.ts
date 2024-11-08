@@ -81,29 +81,9 @@ export const STAFF_SIDEBAR = [
     href: "/staff/order-details",
   },
   {
-    icon: "Package",
-    name: "Manage Fish",
-    href: "#",
-  },
-  {
-    icon: "ShoppingCart",
-    name: "Manage Orders",
-    href: "#",
-  },
-  {
-    icon: "PlusCircle",
-    name: "Import Fish",
-    href: "#",
-  },
-  {
     icon: "Edit",
     name: "Manage Blogs",
-    href: "#",
-  },
-  {
-    icon: "History",
-    name: "Order History",
-    href: "#",
+    href: "/staff/blogs",
   },
   {
     icon: "Users",

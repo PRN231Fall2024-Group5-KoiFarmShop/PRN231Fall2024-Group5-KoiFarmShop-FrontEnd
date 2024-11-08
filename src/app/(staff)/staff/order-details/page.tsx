@@ -1,4 +1,6 @@
-"use client"
+"use client";
+import { Toast, ToastProvider } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import axiosClient from '@/lib/api/axiosClient';
 import { useEffect, useState } from 'react';
 
@@ -41,6 +43,7 @@ enum OrderDetailStatusEnum {
 
 export default function OrderDetailsTask() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const toast = useToast();
 
   const fetchTask = async () => {
     const userId = localStorage.getItem('userId');
@@ -62,16 +65,18 @@ export default function OrderDetailsTask() {
 
   const handleAction = async (orderDetailsId: number, action: string) => {
     const urlMap: { [key: string]: string } = {
+      assign: `/order-details/${orderDetailsId}/assign`,
+      approve: `/order-details/${orderDetailsId}/approve`,
       complete: `/order-details/${orderDetailsId}/complete`,
-      nurture: `/order-details/${orderDetailsId}/nurture`,
-      ship: `/order-details/${orderDetailsId}/ship`,
-      getFish: `/order-details/${orderDetailsId}/get-fish`,
+      reject: `/order-details/${orderDetailsId}/reject`,
+      endSoon: `/order-details/${orderDetailsId}/ship`,
     };
 
     try {
       await axiosClient.put(urlMap[action]);
       fetchTask(); // Refresh tasks to reflect updated status
-    } catch (error) {
+    } catch (error:any) {
+      toast.toast({ title: error.message});
       console.error(`Error updating task ${orderDetailsId} for ${action}:`, error);
     }
   };
@@ -80,47 +85,47 @@ export default function OrderDetailsTask() {
     switch (task.status) {
       case OrderDetailStatusEnum.PENDING:
         return (
-          <>
-            <button
-              onClick={() => handleAction(task.id, 'getFish')}
-              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
-            >
-              Get Fish
-            </button>
-          </>
+          <button
+            onClick={() => handleAction(task.id, 'assign')}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Assign
+          </button>
         );
       case OrderDetailStatusEnum.GETTINGFISH:
         return (
           <>
             <button
-              onClick={() => handleAction(task.id, 'ship')}
+              onClick={() => handleAction(task.id, 'approve')}
               className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
             >
-              Ship
+              Approve
+            </button>
+            <button
+              onClick={() => handleAction(task.id, 'reject')}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Reject
             </button>
           </>
         );
       case OrderDetailStatusEnum.ISSHIPPING:
         return (
-          <>
-            <button
-              onClick={() => handleAction(task.id, 'nurture')}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              Nurture
-            </button>
-          </>
+          <button
+            onClick={() => handleAction(task.id, 'complete')}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            Complete
+          </button>
         );
       case OrderDetailStatusEnum.ISNUTURING:
         return (
-          <>
-            <button
-              onClick={() => handleAction(task.id, 'complete')}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Complete
-            </button>
-          </>
+          <button
+            onClick={() => handleAction(task.id, 'endSoon')}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            End Soon
+          </button>
         );
       case OrderDetailStatusEnum.COMPLETED:
       case OrderDetailStatusEnum.CANCELED:
@@ -154,6 +159,9 @@ export default function OrderDetailsTask() {
           </li>
         ))}
       </ul>
+      <ToastProvider>
+      <Toast />
+      </ToastProvider>
     </div>
   );
 }
