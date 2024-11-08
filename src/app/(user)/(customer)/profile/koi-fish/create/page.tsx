@@ -355,8 +355,15 @@ export default function CreateKoiFishPage() {
                           value={field.value || ""}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === "" ? null : Number(value));
+                            const roundedValue = Math.round(Number(value));
+                            field.onChange(value === "" ? null : roundedValue);
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === ".") {
+                              e.preventDefault();
+                            }
+                          }}
+                          min={4}
                         />
                       </FormControl>
                       <FormMessage />
@@ -378,7 +385,14 @@ export default function CreateKoiFishPage() {
                           value={field.value || ""}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === "" ? null : Number(value));
+                            const roundedValue = Math.round(Number(value));
+                            field.onChange(value === "" ? null : roundedValue);
+                          }}
+                          min={10}
+                          onKeyDown={(e) => {
+                            if (e.key === ".") {
+                              e.preventDefault();
+                            }
                           }}
                         />
                       </FormControl>
@@ -401,7 +415,15 @@ export default function CreateKoiFishPage() {
                           value={field.value || ""}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === "" ? null : Number(value));
+                            const roundedValue = Math.round(Number(value));
+                            field.onChange(value === "" ? null : roundedValue);
+                          }}
+                          min={1}
+                          step={1}
+                          onKeyDown={(e) => {
+                            if (e.key === ".") {
+                              e.preventDefault();
+                            }
                           }}
                         />
                       </FormControl>
