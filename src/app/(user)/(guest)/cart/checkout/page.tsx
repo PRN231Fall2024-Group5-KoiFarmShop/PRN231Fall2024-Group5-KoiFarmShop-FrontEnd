@@ -23,6 +23,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import walletAPI from "@/lib/api/walletAPI";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ExtendedCartItem extends CartItem {
   consign: boolean;
@@ -38,6 +48,8 @@ export default function CheckoutPage() {
   const [orderNote, setOrderNote] = useState("");
   const { toast } = useToast();
   const router = useRouter();
+  const [showInsufficientFundsDialog, setShowInsufficientFundsDialog] =
+    useState(false);
 
   useEffect(() => {
     const rawUser = localStorage.getItem("user");
@@ -129,14 +141,10 @@ export default function CheckoutPage() {
     }
 
     if (
-      walletResponse?.data?.balance &&
+      walletResponse?.data?.balance !== undefined &&
       walletResponse?.data?.balance < subtotal
     ) {
-      toast({
-        title: "Error",
-        description: "Insufficient balance in wallet",
-        variant: "destructive",
-      });
+      setShowInsufficientFundsDialog(true);
       return;
     }
 
@@ -157,12 +165,19 @@ export default function CheckoutPage() {
         router.push("/profile/order-history");
       } else {
         console.log(response);
-        toast({
-          title: "Error",
-          description:
-            response.message || "Failed to create order. Please try again.",
-          variant: "destructive",
-        });
+        if (
+          response.message ===
+          "You dont have enough money to purchase this order"
+        ) {
+          setShowInsufficientFundsDialog(true);
+        } else {
+          toast({
+            title: "Error",
+            description:
+              response.message || "Failed to create order. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error("Error during checkout:", error);
@@ -307,6 +322,28 @@ export default function CheckoutPage() {
           Place Order
         </Button>
       </div>
+      <AlertDialog
+        open={showInsufficientFundsDialog}
+        onOpenChange={setShowInsufficientFundsDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Insufficient Balance</AlertDialogTitle>
+            <AlertDialogDescription>
+              You don't have enough money in your wallet to complete this
+              purchase. Please deposit to your wallet and try again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => router.push("/cart")}>
+              Return to Cart
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/profile")}>
+              Deposit to Wallet
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

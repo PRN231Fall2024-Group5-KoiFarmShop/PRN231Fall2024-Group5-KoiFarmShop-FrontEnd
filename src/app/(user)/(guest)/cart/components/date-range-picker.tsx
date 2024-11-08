@@ -25,14 +25,38 @@ export function DateRangePicker({
   dateRange,
   onDateRangeChange,
 }: DateRangePickerProps) {
-  const handleSelect = (range: DateRange | undefined) => {
-    if (range?.from && range?.to) {
-      const daysDifference = differenceInDays(range.to, range.from);
-      if (daysDifference > 30) {
-        range.to = addDays(range.from, 30);
-      }
+  const tomorrow = React.useMemo(() => addDays(new Date(), 1), []);
+
+  // Set default date range to start from tomorrow if no date range is provided
+  React.useEffect(() => {
+    if (!dateRange?.from) {
+      onDateRangeChange({ from: tomorrow, to: addDays(tomorrow, 0) });
     }
-    onDateRangeChange(range);
+  }, []);
+
+  const handleSelect = (date: Date | undefined) => {
+    if (!date) {
+      onDateRangeChange(undefined);
+      return;
+    }
+
+    // Calculate days from tomorrow to selected date
+    const daysDifference = differenceInDays(date, tomorrow);
+
+    // If selected date is more than 30 days from tomorrow, cap it at 30 days
+    if (daysDifference > 30) {
+      date = addDays(tomorrow, 30);
+    }
+
+    // If selected date is before tomorrow, set it to tomorrow
+    if (daysDifference < 0) {
+      date = tomorrow;
+    }
+
+    onDateRangeChange({
+      from: tomorrow,
+      to: date,
+    });
   };
 
   return (
@@ -48,29 +72,29 @@ export function DateRangePicker({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
-                <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
-                </>
-              ) : (
-                format(dateRange.from, "LLL dd, y")
-              )
+            {dateRange?.to ? (
+              <>
+                Until {format(dateRange.to, "dd/MM/yyyy")}
+                {/* <span className="ml-2 text-sm text-muted-foreground">
+                  ({differenceInDays(dateRange.to, tomorrow)} days)
+                </span> */}
+              </>
             ) : (
-              <span>Pick a date</span>
+              <span>Pick an end date</span>
             )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
-            mode="range"
-            defaultMonth={dateRange?.from}
-            selected={dateRange}
+            mode="single"
+            defaultMonth={tomorrow}
+            selected={dateRange?.to}
             onSelect={handleSelect}
-            numberOfMonths={2}
-            disabled={(date) => date < new Date()}
+            numberOfMonths={1}
+            disabled={(date) => date < tomorrow}
+            fromDate={addDays(tomorrow, 0)}
+            toDate={addDays(tomorrow, 30)}
           />
         </PopoverContent>
       </Popover>

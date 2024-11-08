@@ -25,7 +25,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { DateRange } from "react-day-picker";
-import { differenceInDays } from "date-fns";
+import { addDays, differenceInDays, format } from "date-fns";
 import { DateRangePicker } from "./components/date-range-picker";
 import {
   DropdownMenu,
@@ -60,7 +60,6 @@ export default function CartPage() {
       if (itemIds.length === 0) return [];
       const response = await koiFishApi.getMultipleKoiDetails(itemIds);
       if (!response.isSuccess) throw new Error(response.message);
-      console.log(response);
       return response.data;
     },
     enabled: cartItems.length > 0,
@@ -139,7 +138,16 @@ export default function CartPage() {
 
   const calculateConsignmentDuration = (dateRange: DateRange | undefined) => {
     if (!dateRange?.from || !dateRange?.to) return 0;
-    return differenceInDays(dateRange.to, dateRange.from) + 1;
+
+    if (dateRange.from > dateRange.to) {
+      return 0;
+    }
+
+    if (dateRange.from === dateRange.to) {
+      return 1;
+    }
+
+    return differenceInDays(dateRange.to, dateRange.from) + 2;
   };
 
   const calculateConsignmentPrice = (item: ExtendedCartItem) => {
@@ -410,6 +418,10 @@ export default function CartPage() {
                           </p>
                         )}
                       </div>
+                      <h3 className="mb-2 font-semibold">
+                        From Tomorrow (
+                        {format(addDays(new Date(), 1), "dd/MM/yyyy")})
+                      </h3>
                       <div className="mb-4 flex flex-row gap-4">
                         <DateRangePicker
                           dateRange={item.consignmentConfig.dateRange}

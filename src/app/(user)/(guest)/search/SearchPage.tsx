@@ -50,8 +50,8 @@ const SearchPage = () => {
     searchParams.get("breed") || "all",
   );
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({
-    min: parseInt(searchParams.get("minPrice") || "0"),
-    max: parseInt(searchParams.get("maxPrice") || "10000000"),
+    min: Math.max(10000, parseInt(searchParams.get("minPrice") || "10000")),
+    max: parseInt(searchParams.get("maxPrice") || "100000000"),
   });
   const [currentPage, setCurrentPage] = useState<number>(
     parseInt(searchParams.get("page") || "1"),
@@ -65,6 +65,8 @@ const SearchPage = () => {
 
   const [pageSize] = useState(ITEMS_PER_PAGE);
   const [pageLoading, setPageLoading] = useState(false);
+
+  const [localPriceRange, setLocalPriceRange] = useState(priceRange);
 
   useEffect(() => {
     const fetchBreeds = async () => {
@@ -136,29 +138,46 @@ const SearchPage = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchTerm(currentSearchTerm);
+    setCurrentPage(1);
     updateQueryParams({ q: currentSearchTerm, page: "1" });
   };
 
   const handleSortChange = (value: string) => {
     setSortOption(value);
+    setCurrentPage(1);
     updateQueryParams({ sort: value, page: "1" });
   };
 
   const handleBreedChange = (value: string) => {
     setSelectedBreed(value);
+    setCurrentPage(1);
     updateQueryParams({ breed: value, page: "1" });
+  };
+
+  const handlePriceRangeBlur = (
+    e: React.FocusEvent<HTMLInputElement>,
+    type: "min" | "max",
+  ) => {
+    const value = parseInt(e.target.value) || 0;
+
+    if (type === "min") {
+      const newMin = Math.max(10000, value);
+      const validMin = Math.min(newMin, priceRange.max - 1);
+      setPriceRange((prev) => ({ ...prev, min: validMin }));
+      updateQueryParams({ minPrice: validMin.toString(), page: "1" });
+    } else {
+      const validMax = Math.max(value, priceRange.min + 1);
+      setPriceRange((prev) => ({ ...prev, max: validMax }));
+      updateQueryParams({ maxPrice: validMax.toString(), page: "1" });
+    }
   };
 
   const handlePriceRangeChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: "min" | "max",
   ) => {
-    const value = e.target.value;
-    setPriceRange((prev) => ({ ...prev, [type]: parseInt(value) || 0 }));
-    updateQueryParams({
-      [type === "min" ? "minPrice" : "maxPrice"]: value,
-      page: "1",
-    });
+    const value = parseInt(e.target.value) || 0;
+    setLocalPriceRange((prev) => ({ ...prev, [type]: value }));
   };
 
   const handlePageChange = (page: number) => {
@@ -213,6 +232,7 @@ const SearchPage = () => {
   const getCurrentPageItems = (): KoiFish[] => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
+    console.log(kois, startIndex, endIndex);
     return kois.slice(startIndex, endIndex);
   };
 
@@ -291,17 +311,22 @@ const SearchPage = () => {
             <input
               type="number"
               placeholder="Min"
-              value={priceRange.min}
+              value={localPriceRange.min}
               onChange={(e) => handlePriceRangeChange(e, "min")}
+              onBlur={(e) => handlePriceRangeBlur(e, "min")}
               className="w-32 rounded border border-primary bg-white p-2 text-primary"
+              min={10000}
+              max={priceRange.max - 1}
             />
             <span>-</span>
             <input
               type="number"
               placeholder="Max"
-              value={priceRange.max}
+              value={localPriceRange.max}
               onChange={(e) => handlePriceRangeChange(e, "max")}
+              onBlur={(e) => handlePriceRangeBlur(e, "max")}
               className="w-32 rounded border border-primary bg-white p-2 text-primary"
+              min={priceRange.min + 1}
             />
           </div>
         </div>
@@ -316,52 +341,63 @@ const SearchPage = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {getCurrentPageItems().map((koi) => (
-                <KoiCard key={koi.id} koi={koi} />
-              ))}
-            </div>
+            {kois.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-xl font-semibold text-gray-600">
+                  No koi fish found
+                </p>
+                <p className="mt-2 text-gray-500">
+                  Try adjusting your search criteria
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {getCurrentPageItems().map((koi) => (
+                    <KoiCard key={koi.id} koi={koi} />
+                  ))}
+                </div>
 
-            {!isLoading && kois.length > 0 && (
-              <div className="mt-8 flex justify-center">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      {currentPage !== 1 && (
-                        <PaginationPrevious
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          // disabled={pageLoading}
-                        />
-                      )}
-                    </PaginationItem>
-                    {getPageNumbers().map((pageNumber, index) => (
-                      <PaginationItem key={index}>
-                        {pageNumber === "..." ? (
-                          <PaginationEllipsis />
-                        ) : (
-                          <PaginationLink
-                            onClick={() =>
-                              handlePageChange(pageNumber as number)
-                            }
-                            isActive={currentPage === pageNumber}
+                <div className="mt-8 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        {currentPage !== 1 && (
+                          <PaginationPrevious
+                            onClick={() => handlePageChange(currentPage - 1)}
                             // disabled={pageLoading}
-                          >
-                            {pageNumber}
-                          </PaginationLink>
+                          />
                         )}
                       </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      {currentPage !== totalPages && (
-                        <PaginationNext
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          // disabled={pageLoading}
-                        />
-                      )}
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
+                      {getPageNumbers().map((pageNumber, index) => (
+                        <PaginationItem key={index}>
+                          {pageNumber === "..." ? (
+                            <PaginationEllipsis />
+                          ) : (
+                            <PaginationLink
+                              onClick={() =>
+                                handlePageChange(pageNumber as number)
+                              }
+                              isActive={currentPage === pageNumber}
+                              // disabled={pageLoading}
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          )}
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        {currentPage !== totalPages && (
+                          <PaginationNext
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            // disabled={pageLoading}
+                          />
+                        )}
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              </>
             )}
           </>
         )}
