@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import koiBreedApi, { KoiBreed } from "@/lib/api/koiBreedApi";
 import { CircleUser, ShoppingCart } from "lucide-react";
-import { getCart } from "@/lib/cart";
+import { clearCart, getCart } from "@/lib/cart";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +45,9 @@ const Header = () => {
     localStorage.removeItem("jwt");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
+    clearCart();
     setUser(null);
+    router.push("/");
   };
 
   useEffect(() => {
@@ -65,7 +67,7 @@ const Header = () => {
 
   useEffect(() => {
     const updateCartCount = () => {
-      const cart = getCart();
+      const cart: any = getCart();
       setCartItemCount(cart.length);
     };
 
@@ -207,58 +209,68 @@ const Header = () => {
                   </NavigationMenuItem>
                 ))}
               </NavigationMenuList>
-              <div className="px-4">
-              <NotificationBar />
-              </div>
+
               {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      className="ml-2 rounded-full"
-                    >
-                      {user?.imageUrl ? (
-                        <img
-                          src={user?.imageUrl}
-                          alt="User Avatar"
-                          className="rounded-full"
-                        />
-                      ) : (
-                        <CircleUser className="h-5 w-5" />
-                      )}
-                      <span className="sr-only">Toggle user menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push("/profile")}>
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => router.push("/profile/order-history")}
-                    >
-                      Orders
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        router.push("/profile/transaction-history")
-                      }
-                    >
-                      Transactions
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/profile/wallet")}>
-                      Wallet
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>Your Fish</DropdownMenuItem>
-                    <DropdownMenuItem>Your Consignment</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                  <div className="px-4">
+                    <NotificationBar />
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="ml-2 rounded-full"
+                      >
+                        {user?.imageUrl ? (
+                          <img
+                            src={user?.imageUrl}
+                            alt="User Avatar"
+                            className="rounded-full"
+                          />
+                        ) : (
+                          <CircleUser className="h-5 w-5" />
+                        )}
+                        <span className="sr-only">Toggle user menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => router.push("/profile")}>
+                        Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push("/profile/koi-fish")}
+                      >
+                        My Koi Fish
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push("/profile/order-history")}
+                      >
+                        Orders
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push("/profile/transaction-history")
+                        }
+                      >
+                        Transactions
+                      </DropdownMenuItem>
+                      {/* <DropdownMenuItem
+                        onClick={() => router.push("/profile/wallet")}
+                      >
+                        Wallet
+                      </DropdownMenuItem> */}
+                      {/* <DropdownMenuItem>Your Fish</DropdownMenuItem>
+                      <DropdownMenuItem>Your Consignment</DropdownMenuItem> */}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout}>
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               ) : (
                 <div>
                   <Link href="/login" legacyBehavior passHref>
