@@ -1,7 +1,8 @@
 "use client";
 
-import { BellIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,14 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import * as signalR from "@microsoft/signalr";
-import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import * as signalR from "@microsoft/signalr";
 import axios from "axios";
+import { formatDistanceToNow } from "date-fns";
+import { BellIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
 
 interface Notification {
     title: string;
@@ -53,11 +53,13 @@ export default function NotificationBar() {
   useEffect(() => {
     fetchNotifications();
   }, []);
-
+  
   useEffect(() => {
+    console.log("NotificationBar mounted");
+    
     const connection = new signalR.HubConnectionBuilder()
       .configureLogging(signalR.LogLevel.Debug)
-      .withUrl("http://217.15.164.128:2000/notificationHub", {
+      .withUrl("https://koi-api.uydev.id.vn/notificationHub", {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets,
       })
@@ -86,6 +88,7 @@ export default function NotificationBar() {
   }, [notifications]);
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="secondary" size="icon" className="rounded-full relative ml-auto">
@@ -109,6 +112,7 @@ export default function NotificationBar() {
         </ScrollArea>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }
 
@@ -118,7 +122,8 @@ function NotificationItem({ notification }: { notification: Notification }) {
   console.log(notification);
 
   return (
-    <DropdownMenuItem>
+    
+      <DropdownMenuItem>
       <div className="flex items-center gap-2">
         <Avatar>
           <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
@@ -135,5 +140,6 @@ function NotificationItem({ notification }: { notification: Notification }) {
         </div>
       </div>
     </DropdownMenuItem>
+
   );
 }

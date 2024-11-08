@@ -1,11 +1,10 @@
-import { Suspense } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import "../styles/globals.css";
-import { Inter } from "next/font/google";
-import Header from "@/components/shared/Header";
-import Footer from "@/components/shared/Footer";
 import Providers from "@/components/providers";
-
+import { Toaster } from "@/components/ui/toaster";
+import { Inter } from "next/font/google";
+import { Suspense } from "react";
+import { ToastContainer } from 'react-toastify';
+import "../styles/globals.css";
+import 'react-toastify/dist/ReactToastify.css';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -25,6 +24,18 @@ export default function RootLayout({
           <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
           <Toaster />
         </Providers>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </body>
     </html>
   );
