@@ -50,7 +50,7 @@ export default function KoiDietManagementPage() {
   const [selectedDiet, setSelectedDiet] = useState<KoiDiet | null>(null);
   const [dietFormData, setDietFormData] = useState({
     name: "",
-    dietCost: 0,
+    dietCost: 1000,
     description: "",
   });
   const [openDietDialog, setOpenDietDialog] = useState(false);
@@ -117,14 +117,14 @@ export default function KoiDietManagementPage() {
         description: diet.description,
       });
     } else {
-      setDietFormData({ name: "", dietCost: 0, description: "" });
+      setDietFormData({ name: "", dietCost: 1000, description: "" });
     }
     setOpenDietDialog(true);
   };
 
   const handleCloseDietDialog = () => {
     setOpenDietDialog(false);
-    setDietFormData({ name: "", dietCost: 0, description: "" });
+    setDietFormData({ name: "", dietCost: 1000, description: "" });
   };
 
   const handleDietFormChange = (
@@ -266,9 +266,26 @@ export default function KoiDietManagementPage() {
               name="dietCost"
               type="number"
               value={dietFormData.dietCost}
-              onChange={handleDietFormChange}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Round to whole number and ensure minimum of 1000
+                const roundedValue = Math.max(1000, Math.round(Number(value)));
+                handleDietFormChange({
+                  target: {
+                    name: "dietCost",
+                    value: value === "" ? "" : roundedValue.toString(),
+                  },
+                } as React.ChangeEvent<HTMLInputElement>);
+              }}
+              onKeyDown={(e) => {
+                // Prevent decimal point input
+                if (e.key === ".") {
+                  e.preventDefault();
+                }
+              }}
               placeholder="Enter diet cost"
               className="w-full"
+              min={1000}
             />
             <Input
               id="description"
