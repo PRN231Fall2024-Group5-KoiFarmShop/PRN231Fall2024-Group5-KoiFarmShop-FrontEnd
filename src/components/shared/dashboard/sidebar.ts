@@ -59,6 +59,11 @@ export const MANAGER_SIDEBAR = [
   },
   {
     icon: "Edit",
+    name: "Manage FAQs",
+    href: "/manager/faqs",
+  },
+  {
+    icon: "Edit",
     name: "Approve Blogs",
     href: "#",
   },
