@@ -110,7 +110,10 @@ export default function HomePage() {
       </section>
 
       {/* Blog Section */}
-      <section className="flex w-full flex-col items-center justify-center bg-[#F4F0E7] py-16">
+      <section
+        id="blog-section"
+        className="flex w-full flex-col items-center justify-center bg-[#F4F0E7] py-16"
+      >
         <div className="container mx-auto max-w-[1200px] px-4">
           <h2 className="mb-8 text-center text-3xl font-medium">
             Latest from Our Blog
@@ -156,7 +159,10 @@ export default function HomePage() {
       {/* CEO Section */}
       <div className="h-[100px] w-full scale-x-[-1] scale-y-[-1] transform bg-[#F4F0E7] bg-[url('/layered-waves-haikei-short.svg')] bg-cover bg-center bg-no-repeat"></div>
 
-      <section className="flex w-full flex-row items-center justify-center bg-primary">
+      <section
+        id="about-us-section"
+        className="flex w-full flex-row items-center justify-center bg-primary"
+      >
         <div className="container flex flex-row items-center justify-center gap-8 px-4 text-white">
           <div className="">
             <Image

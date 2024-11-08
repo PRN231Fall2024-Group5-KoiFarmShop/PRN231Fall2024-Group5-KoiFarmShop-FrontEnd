@@ -25,12 +25,12 @@ export function DateRangePicker({
   dateRange,
   onDateRangeChange,
 }: DateRangePickerProps) {
-  const tomorrow = React.useMemo(() => addDays(new Date(), 1), []);
+  const tomorrow = React.useMemo(() => addDays(new Date(), 0), []);
 
   // Set default date range to start from tomorrow if no date range is provided
   React.useEffect(() => {
     if (!dateRange?.from) {
-      onDateRangeChange({ from: tomorrow, to: addDays(tomorrow, 0) });
+      onDateRangeChange({ from: tomorrow, to: addDays(tomorrow, 2) });
     }
   }, []);
 
@@ -39,6 +39,13 @@ export function DateRangePicker({
       onDateRangeChange(undefined);
       return;
     }
+
+    // Set date's time to match tomorrow's time
+    const tomorrowTime = new Date(tomorrow);
+    date.setHours(tomorrowTime.getHours());
+    date.setMinutes(tomorrowTime.getMinutes());
+    date.setSeconds(tomorrowTime.getSeconds());
+    date.setMilliseconds(tomorrowTime.getMilliseconds());
 
     // Calculate days from tomorrow to selected date
     const daysDifference = differenceInDays(date, tomorrow);

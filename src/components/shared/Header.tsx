@@ -88,9 +88,9 @@ const Header = () => {
   };
 
   const navigationItems = [
-    { name: "Blogs", href: "/blogs" },
-    { name: "FAQ", href: "/faq" },
-    { name: "About Us", href: "/about" },
+    { name: "Blogs", href: "/#blog-section" },
+    { name: "FAQ", href: "/#faq-section" },
+    { name: "About Us", href: "/#about-us-section" },
     {
       name: "Guides",
       items: [

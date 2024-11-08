@@ -530,7 +530,8 @@ const koiFishApi = {
   getMyKoiFish: async (
     params: KoiFishQueryParams = {},
   ): Promise<ApiResponse<KoiFish[]>> => {
-    let query = "/odata/my-koi-fishes?$expand=KoiBreeds,ConsignmentForNurtures";
+    let query =
+      "/odata/my-koi-fishes?$count=true&$expand=KoiBreeds,ConsignmentForNurtures";
 
     // Add pagination parameters if provided
     if (params.pageNumber && params.pageSize) {

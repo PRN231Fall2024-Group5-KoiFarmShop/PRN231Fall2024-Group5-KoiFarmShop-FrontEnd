@@ -57,8 +57,9 @@ const mapApiDietToKoiDiet = (apiDiet: ApiKoiDiet): KoiDiet => ({
 const koiDietApi = {
   getDietList: async (): Promise<ApiResponse<KoiDiet[]>> => {
     const response = await axiosClient.get<{ value: ApiKoiDiet[] }>(
-      "/odata/diets",
+      "/odata/diets?$filter=IsDeleted eq false",
     );
+
     return {
       data: response.data.value.map(mapApiDietToKoiDiet),
       message: "Diet list retrieved successfully",

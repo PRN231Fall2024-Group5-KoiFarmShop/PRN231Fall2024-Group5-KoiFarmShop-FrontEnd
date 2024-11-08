@@ -136,6 +136,8 @@ export default function CartPage() {
     );
   };
 
+  // console.log("dateRange", cartItems[0].consignmentConfig?.dateRange);
+
   const calculateConsignmentDuration = (dateRange: DateRange | undefined) => {
     if (!dateRange?.from || !dateRange?.to) return 0;
 
@@ -147,7 +149,7 @@ export default function CartPage() {
       return 1;
     }
 
-    return differenceInDays(dateRange.to, dateRange.from) + 2;
+    return differenceInDays(dateRange.to, dateRange.from) + 1;
   };
 
   const calculateConsignmentPrice = (item: ExtendedCartItem) => {
@@ -419,8 +421,8 @@ export default function CartPage() {
                         )}
                       </div>
                       <h3 className="mb-2 font-semibold">
-                        From Tomorrow (
-                        {format(addDays(new Date(), 1), "dd/MM/yyyy")})
+                        From Today (
+                        {format(addDays(new Date(), 0), "dd/MM/yyyy")})
                       </h3>
                       <div className="mb-4 flex flex-row gap-4">
                         <DateRangePicker
