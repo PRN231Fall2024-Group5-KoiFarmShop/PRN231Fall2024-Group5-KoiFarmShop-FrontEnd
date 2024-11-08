@@ -305,7 +305,13 @@ export default function UpdateKoiFishPage() {
                           value={field.value || ""}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === "" ? null : Number(value));
+                            const roundedValue = Math.round(Number(value));
+                            field.onChange(value === "" ? null : roundedValue);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === ".") {
+                              e.preventDefault();
+                            }
                           }}
                         />
                       </FormControl>
@@ -328,7 +334,13 @@ export default function UpdateKoiFishPage() {
                           value={field.value || ""}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === "" ? null : Number(value));
+                            const roundedValue = Math.round(Number(value));
+                            field.onChange(value === "" ? null : roundedValue);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === ".") {
+                              e.preventDefault();
+                            }
                           }}
                         />
                       </FormControl>
@@ -351,7 +363,13 @@ export default function UpdateKoiFishPage() {
                           value={field.value || ""}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === "" ? null : Number(value));
+                            const roundedValue = Math.round(Number(value));
+                            field.onChange(value === "" ? null : roundedValue);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === ".") {
+                              e.preventDefault();
+                            }
                           }}
                         />
                       </FormControl>

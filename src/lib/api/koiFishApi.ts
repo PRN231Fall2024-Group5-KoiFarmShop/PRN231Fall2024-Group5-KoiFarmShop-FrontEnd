@@ -93,6 +93,10 @@ export interface KoiFish {
     actualCost: number | null;
     note: string | null;
   }[];
+  owner?: {
+    fullName: string;
+    avatarUrl: string;
+  } | null;
 }
 
 export interface KoiFishOdata {
@@ -170,6 +174,10 @@ export interface KoiFishOdata {
     CertificateType: string;
     CertificateUrl: string;
   }[];
+  Owner: {
+    FullName: string;
+    AvatarUrl: string;
+  } | null;
 }
 
 export interface KoiBreed {
@@ -276,6 +284,12 @@ const mapOdataToKoiFish = (odataKoi: KoiFishOdata): KoiFish => ({
     actualCost: consignment.ActualCost,
     note: consignment.Note,
   })),
+  owner: odataKoi.Owner
+    ? {
+        fullName: odataKoi.Owner.FullName,
+        avatarUrl: odataKoi.Owner.AvatarUrl,
+      }
+    : null,
 });
 
 const koiFishApi = {
@@ -423,7 +437,7 @@ const koiFishApi = {
     let query = `/odata/koi-fishes?$filter=${encodeURIComponent(fullFilter)}`;
 
     // Add $expand to include KoiBreeds
-    query += "&$expand=KoiBreeds,KoiFishImages";
+    query += "&$expand=KoiBreeds,KoiFishImages,Owner";
 
     // Add other query parameters
     if (params.pageNumber)
@@ -477,7 +491,7 @@ const koiFishApi = {
     let query = `/odata/koi-fishes?$filter=${encodeURIComponent(baseFilter)}`;
 
     // Add $expand to include KoiBreeds
-    query += "&$expand=KoiBreeds,KoiFishImages";
+    query += "&$expand=KoiBreeds,KoiFishImages,Owner";
 
     // Add other query parameters
     if (params.pageNumber)

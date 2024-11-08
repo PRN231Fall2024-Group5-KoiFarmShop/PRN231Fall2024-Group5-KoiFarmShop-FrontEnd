@@ -125,7 +125,7 @@ const KoiCard: React.FC<KoiCardProps> = ({ koi }) => {
             </p>
             <p>
               <span className="font-semibold">Seller:</span>{" "}
-              {koi.ownerId ?? "Koi Farm"}
+              {koi.owner?.fullName ?? "Koi Farm"}
             </p>
             <p>
               <span className="font-semibold">Gender:</span> {koi.gender}

@@ -139,7 +139,21 @@ const SearchPage = () => {
     e.preventDefault();
     setSearchTerm(currentSearchTerm);
     setCurrentPage(1);
-    updateQueryParams({ q: currentSearchTerm, page: "1" });
+
+    const newMin = Math.max(10000, localPriceRange.min);
+    const validMin = Math.min(newMin, localPriceRange.max - 1);
+    setPriceRange((prev) => ({ ...prev, min: validMin }));
+
+    const validMax = Math.max(localPriceRange.max, localPriceRange.min + 1);
+    setPriceRange((prev) => ({ ...prev, max: validMax }));
+    // updateQueryParams({ maxPrice: validMax.toString(), page: "1" });
+
+    updateQueryParams({
+      q: currentSearchTerm,
+      minPrice: validMin.toString(),
+      maxPrice: validMax.toString(),
+      page: "1",
+    });
   };
 
   const handleSortChange = (value: string) => {
@@ -305,30 +319,30 @@ const SearchPage = () => {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-4">
+              <span>Price Range (VND):</span>
+              <input
+                type="number"
+                placeholder="Min"
+                value={localPriceRange.min}
+                onChange={(e) => handlePriceRangeChange(e, "min")}
+                // onBlur={(e) => handlePriceRangeBlur(e, "min")}
+                className="w-32 rounded border border-primary bg-white p-2 text-primary"
+                min={10000}
+                // max={localPriceRange.max - 1}
+              />
+              <span>-</span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={localPriceRange.max}
+                onChange={(e) => handlePriceRangeChange(e, "max")}
+                // onBlur={(e) => handlePriceRangeBlur(e, "max")}
+                className="w-32 rounded border border-primary bg-white p-2 text-primary"
+                min={localPriceRange.min + 1}
+              />
+            </div>
           </form>
-          <div className="flex items-center gap-4">
-            <span>Price Range (VND):</span>
-            <input
-              type="number"
-              placeholder="Min"
-              value={localPriceRange.min}
-              onChange={(e) => handlePriceRangeChange(e, "min")}
-              onBlur={(e) => handlePriceRangeBlur(e, "min")}
-              className="w-32 rounded border border-primary bg-white p-2 text-primary"
-              min={10000}
-              max={priceRange.max - 1}
-            />
-            <span>-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={localPriceRange.max}
-              onChange={(e) => handlePriceRangeChange(e, "max")}
-              onBlur={(e) => handlePriceRangeBlur(e, "max")}
-              className="w-32 rounded border border-primary bg-white p-2 text-primary"
-              min={priceRange.min + 1}
-            />
-          </div>
         </div>
         {isLoading || pageLoading ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
