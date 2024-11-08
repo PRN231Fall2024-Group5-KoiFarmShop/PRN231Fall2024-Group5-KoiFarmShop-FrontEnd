@@ -49,7 +49,7 @@ export default function ProfilePage() {
   const [withdrawRequests, setWithdrawRequests] = useState<WithdrawRequest[]>([]);
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
-  const [bankNote, setBankNote] = useState<string>(""); // Added bankNote state
+  const [bankNote, setBankNote] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const { toast } = useToast();
 
@@ -90,12 +90,7 @@ export default function ProfilePage() {
 
   const handleDepositVNPay = async () => {
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid positive number",
-        variant: "destructive",
-      });
+    if (!isAmountValid(amount)) {
       return;
     }
 
@@ -120,12 +115,7 @@ export default function ProfilePage() {
 
   const handleDepositPayOS = async () => {
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid positive number",
-        variant: "destructive",
-      });
+    if (!isAmountValid(amount)) {
       return;
     }
 
@@ -150,12 +140,7 @@ export default function ProfilePage() {
 
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid positive number",
-        variant: "destructive",
-      });
+    if (!isAmountValid(amount)) {
       return;
     }
 
@@ -169,7 +154,7 @@ export default function ProfilePage() {
     }
 
     setLoading(true);
-    const response = await withdrawnRequestAPI.createWithdrawnRequest(bankNote, amount + "");
+    const response = await withdrawnRequestAPI.createWithdrawnRequest(bankNote, amount.toString());
     setLoading(false);
 
     if (response.isSuccess && response.data) {
@@ -177,9 +162,9 @@ export default function ProfilePage() {
         title: "Success",
         description: "Withdrawal request initiated successfully",
       });
-      setWithdrawAmount(""); // Clear the input
-      setBankNote(""); // Clear the bankNote input
-      fetchWithdrawRequests(); // Refresh the list
+      setWithdrawAmount("");
+      setBankNote("");
+      fetchWithdrawRequests();
     } else {
       toast({
         title: "Error",
@@ -188,20 +173,34 @@ export default function ProfilePage() {
       });
     }
 
-    fetchWalletInfo()
+    fetchWalletInfo();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow empty string or numbers with up to 2 decimal places
     if (value === "" || /^\d+(\.\d{0,2})?$/.test(value)) {
       setDepositAmount(value);
-      setWithdrawAmount(value); // Combined both input fields change
     }
+  };
+
+  const handleQuickSelect = (amount: number) => {
+    setDepositAmount(amount.toString());
   };
 
   const handleBankNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBankNote(e.target.value);
+  };
+
+  const isAmountValid = (amount: number) => {
+    if (isNaN(amount) || amount < 20000 || amount > 10000000) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter an amount between 20,000 VND and 10,000,000 VND",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -245,7 +244,6 @@ export default function ProfilePage() {
               <span className="font-bold">{formatPriceVND(wallet.balance)}</span>
             </p>
             <div className="flex space-x-4">
-              {/* Button for VNPay Deposit */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline">Deposit VNPay</Button>
@@ -272,6 +270,18 @@ export default function ProfilePage() {
                         className="col-span-3"
                       />
                     </div>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {[20000, 50000, 100000, 200000, 500000, 1000000, 5000000].map((amount) => (
+                        <Button
+                          key={amount}
+                          onClick={() => handleQuickSelect(amount)}
+                          variant="outline"
+                          className="text-sm"
+                        >
+                          {formatPriceVND(amount)}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={handleDepositVNPay} disabled={loading}>
@@ -281,7 +291,6 @@ export default function ProfilePage() {
                 </DialogContent>
               </Dialog>
 
-              {/* Button for PayOS Deposit */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline">Deposit PayOS</Button>
@@ -308,59 +317,22 @@ export default function ProfilePage() {
                         className="col-span-3"
                       />
                     </div>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {[20000, 50000, 100000, 200000, 500000, 1000000, 5000000].map((amount) => (
+                        <Button
+                          key={amount}
+                          onClick={() => handleQuickSelect(amount)}
+                          variant="outline"
+                          className="text-sm"
+                        >
+                          {formatPriceVND(amount)}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={handleDepositPayOS} disabled={loading}>
                       {loading ? "Processing..." : "Deposit PayOS"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              {/* Button for Withdrawal */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline">Withdraw Money</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Withdraw Money</DialogTitle>
-                    <DialogDescription>
-                      Enter the amount and bank note for your withdrawal.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="withdrawAmount" className="text-right">
-                        Amount
-                      </Label>
-                      <Input
-                        id="withdrawAmount"
-                        type="text"
-                        inputMode="decimal"
-                        value={withdrawAmount}
-                        onChange={handleInputChange}
-                        placeholder="Enter amount"
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="bankNote" className="text-right">
-                        Bank Note
-                      </Label>
-                      <Input
-                        id="bankNote"
-                        type="text"
-                        value={bankNote}
-                        onChange={handleBankNoteChange}
-                        placeholder="Enter bank details"
-                        className="col-span-3"
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleWithdraw} disabled={loading}>
-                      {loading ? "Processing..." : "Withdraw"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
