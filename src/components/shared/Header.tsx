@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import koiBreedApi, { KoiBreed } from "@/lib/api/koiBreedApi";
 import { CircleUser, ShoppingCart } from "lucide-react";
-import { clearCart, getCart } from "@/lib/cart";
+import { clearCart, getCart, CART_UPDATED_EVENT } from "@/lib/cart";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,15 +67,17 @@ const Header = () => {
 
   useEffect(() => {
     const updateCartCount = () => {
-      const cart: any = getCart();
+      const cart = getCart();
       setCartItemCount(cart.length);
     };
 
     updateCartCount();
     window.addEventListener("storage", updateCartCount);
+    window.addEventListener(CART_UPDATED_EVENT, updateCartCount);
 
     return () => {
       window.removeEventListener("storage", updateCartCount);
+      window.removeEventListener(CART_UPDATED_EVENT, updateCartCount);
     };
   }, []);
 

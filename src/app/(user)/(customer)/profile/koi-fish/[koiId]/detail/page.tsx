@@ -156,9 +156,6 @@ function MyKoiFishDetail() {
                   {new Date(koiFish.dob!).toLocaleDateString()}
                 </p>
                 <p>
-                  <strong>Age:</strong> {koiFish.age} years
-                </p>
-                <p>
                   <strong>Length:</strong> {koiFish.length} cm
                 </p>
                 <p>

@@ -19,7 +19,7 @@ export interface KoiFishCreate {
   origin: string;
   gender: string;
   dob: string;
-  age?: number;
+  // age?: number;
   length: number;
   weight: number;
   isAvailableForSale: boolean;
@@ -58,7 +58,7 @@ export interface KoiFish {
   origin: string;
   gender: string;
   dob?: string;
-  age: number;
+  // age: number;
   ownerId: number | null;
   length: number;
   weight: number;
@@ -233,7 +233,7 @@ const mapOdataToKoiFish = (odataKoi: KoiFishOdata): KoiFish => ({
   origin: odataKoi.Origin,
   gender: odataKoi.Gender ? "Male" : "Female",
   dob: odataKoi.Dob,
-  age: new Date().getFullYear() - new Date(odataKoi.Dob).getFullYear(),
+  // age: new Date().getFullYear() - new Date(odataKoi.Dob).getFullYear(),
   ownerId: odataKoi.OwnerId,
   length: odataKoi.Length,
   weight: odataKoi.Weight,
