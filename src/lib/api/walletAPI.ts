@@ -30,7 +30,7 @@ interface ApiResponse<T> {
   message: string;
 }
 
-interface WalletTransaction {
+export interface WalletTransaction {
   orderId: number | null;
   transactionType: string;
   paymentMethod: string;

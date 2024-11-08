@@ -20,20 +20,20 @@ import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 
 interface Notification {
-    title: string;
-    body: string;
-    url: string;
-    receiverId: number;
-    type: string;
-    isRead: boolean;
-    id: number;
-    createdAt: string;
-    createdBy: number;
-    modifiedAt?: string | null;
-    modifiedBy?: number | null;
-    deletedAt?: string | null;
-    deletedBy?: number | null;
-    isDeleted: boolean;
+  title: string;
+  body: string;
+  url: string;
+  receiverId: number;
+  type: string;
+  isRead: boolean;
+  id: number;
+  createdAt: string;
+  createdBy: number;
+  modifiedAt?: string | null;
+  modifiedBy?: number | null;
+  deletedAt?: string | null;
+  deletedBy?: number | null;
+  isDeleted: boolean;
 }
 
 export default function NotificationBar() {
@@ -41,11 +41,14 @@ export default function NotificationBar() {
   const [unreadNumber, setUnreadNumber] = useState(0);
 
   const fetchNotifications = async () => {
-    const { data } = await axios.get("https://koi-api.uydev.id.vn/api/v1/notifications", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+    const { data } = await axios.get(
+      "https://koi-api.uydev.id.vn/api/v1/notifications",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
       },
-    });
+    );
 
     setNotifications(data?.data);
   };
@@ -91,14 +94,22 @@ export default function NotificationBar() {
     <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" className="rounded-full relative ml-auto">
+        <Button
+          variant="secondary"
+          size="icon"
+          className="relative ml-auto rounded-full"
+        >
           <BellIcon className="h-5 w-5" />
-          <span className="absolute -top-1 -right-2 bg-red-500 text-background h-6 w-6 items-center justify-center flex rounded-full select-none">
-            {unreadNumber}
+          <span className="absolute -right-2 -top-1 flex h-4 w-4 select-none items-center justify-center rounded-full bg-red-500 text-background">
+            {/* {unreadNumber} */}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-96 shadow-2xl mr-6 mt-2" side="bottom" align="start">
+      <DropdownMenuContent
+        className="mr-6 mt-2 w-96 shadow-2xl"
+        side="bottom"
+        align="start"
+      >
         <DropdownMenuLabel className="text-orange-500">
           <Badge>Notification</Badge>
         </DropdownMenuLabel>
@@ -118,8 +129,8 @@ export default function NotificationBar() {
 
 function NotificationItem({ notification }: { notification: Notification }) {
   const domain = window.location.origin;
-  console.log(domain);
-  console.log(notification);
+  // console.log(domain);
+  // console.log(notification);
 
   return (
     
@@ -130,11 +141,17 @@ function NotificationItem({ notification }: { notification: Notification }) {
           <AvatarFallback>{notification.createdBy ?? "Unknown"}</AvatarFallback>
         </Avatar>
         <div>
-          <div className="font-semibold">{notification.title ?? "No Title"}</div>
-          <div className="line-clamp-2">{notification.body ?? "No Content"}</div>
+          <div className="font-semibold">
+            {notification.title ?? "No Title"}
+          </div>
+          <div className="line-clamp-2">
+            {notification.body ?? "No Content"}
+          </div>
           <div className="text-xs">
             {notification.createdAt
-              ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })
+              ? formatDistanceToNow(new Date(notification.createdAt), {
+                  addSuffix: true,
+                })
               : "Unknown time"}
           </div>
         </div>
