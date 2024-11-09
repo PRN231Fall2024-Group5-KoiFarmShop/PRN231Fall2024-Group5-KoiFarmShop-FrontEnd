@@ -186,7 +186,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         <span className="bg-neutral-4 h-[2px] w-full"></span>
       </div>
       <div className="flex flex-col gap-4">
-        <Button
+        {/* <Button
           variant={"outline"}
           className="text-neutral-7 flex w-full items-center gap-2 rounded-full py-5 hover:bg-[#F4F0E7] hover:text-primary"
         >
@@ -197,8 +197,8 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
             height={22}
           />
           Continue with Google
-        </Button>
-        <Button
+        </Button> */}
+        {/* <Button
           variant={"outline"}
           className="text-neutral-7 flex w-full items-center gap-2 rounded-full py-5 hover:bg-[#F4F0E7] hover:text-primary"
         >
@@ -209,7 +209,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
             height={22}
           />
           Continue with Apple
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
