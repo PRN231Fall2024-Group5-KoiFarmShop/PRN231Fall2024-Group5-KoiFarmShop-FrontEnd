@@ -88,7 +88,7 @@ export default function OrderDetailsPage() {
     }
 
     try {
-      await axiosClient.put(`/order-detail/${orderDetailId}/assign`, staffId);
+      await axiosClient.put(`/staffs/${staffId}/task-assign`, orderDetailId);
       toast({
         title: "Success",
         description: "Staff assigned successfully.",
