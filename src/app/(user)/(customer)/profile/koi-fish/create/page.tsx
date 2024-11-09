@@ -40,6 +40,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+const getTodayString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const fishSchema = z.object({
   name: z.string().min(1, "Fish name is required"),
   origin: z.string().min(1, "Origin is required"),
@@ -334,7 +342,7 @@ export default function CreateKoiFishPage() {
                     <FormItem>
                       <FormLabel>Date of Birth</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} max={getTodayString()} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -439,7 +447,7 @@ export default function CreateKoiFishPage() {
                     <FormItem>
                       <FormLabel>Last Health Check</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} max={getTodayString()} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
