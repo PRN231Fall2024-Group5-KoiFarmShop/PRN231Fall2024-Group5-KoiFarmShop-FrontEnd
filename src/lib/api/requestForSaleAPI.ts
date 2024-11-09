@@ -208,7 +208,7 @@ const requestForSaleApi = {
     params: RequestForSaleQueryParams = {},
   ): Promise<ODataResponse<RequestForSale>> => {
     try {
-      let query = "/odata/my-request-for-sales?$expand=KoiFish";
+      let query = "/odata/my-request-for-sales?$count=true&$expand=KoiFish";
 
       // Add koiFishId filter if provided
       if (params.koiFishId) {
@@ -269,7 +269,7 @@ const requestForSaleApi = {
     params: RequestForSaleQueryParams = {},
   ): Promise<ODataResponse<RequestForSale>> => {
     try {
-      let query = "/odata/request-for-sales?$expand=KoiFish,User";
+      let query = "/odata/request-for-sales?$count=true&$expand=KoiFish,User";
 
       // Add filters if provided
       let filters = [];
@@ -325,11 +325,22 @@ const requestForSaleApi = {
 
   reject: async (
     id: number,
-    // reason?: string,
+    reason: string,
   ): Promise<ApiResponse<RequestForSale>> => {
     const response = await axiosClient.put<ApiResponse<RequestForSale>>(
       `/RequestForSale/${id}/reject`,
-      // { reason },
+      { reason },
+    );
+    return response.data;
+  },
+
+  update: async (
+    requestId: number,
+    data: { id: number; priceDealed: number; note?: string },
+  ): Promise<ApiResponse<RequestForSale>> => {
+    const response = await axiosClient.put<ApiResponse<RequestForSale>>(
+      `/RequestForSale/${requestId}`,
+      data,
     );
     return response.data;
   },

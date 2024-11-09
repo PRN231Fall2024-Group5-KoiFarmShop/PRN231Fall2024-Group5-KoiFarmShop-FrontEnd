@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Key, NotebookPen, Search } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import HomeFAQsection from "./components/HomeFAQsection";
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -225,6 +226,9 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <HomeFAQsection />
     </main>
   );
 }

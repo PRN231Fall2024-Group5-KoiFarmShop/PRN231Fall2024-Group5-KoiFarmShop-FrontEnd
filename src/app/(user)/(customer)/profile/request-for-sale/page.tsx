@@ -64,6 +64,10 @@ function RequestForSalePage() {
   const [selectedRequest, setSelectedRequest] = useState<RequestForSale | null>(
     null,
   );
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [priceDealed, setPriceDealed] = useState("");
+  const [note, setNote] = useState("");
+  const [newNote, setNewNote] = useState("");
 
   const fetchRequests = async (params: {
     pageNumber?: number;
@@ -74,14 +78,14 @@ function RequestForSalePage() {
     try {
       const response = await requestForSaleApi.getMyRequestForSales({
         pageNumber: params.pageNumber || 1,
-        pageSize: 10,
+        pageSize: 5,
         searchTerm: params.searchTerm,
         status: params.status,
-        sortBy: "CreatedAt desc",
+        sortBy: "ModifiedAt desc",
       });
       setRequests(response.value);
       const totalCount = response["@odata.count"] || response.value.length;
-      setTotalPages(Math.ceil(totalCount / 10));
+      setTotalPages(Math.ceil(totalCount / 5));
     } catch (err) {
       setError("An error occurred while fetching requests.");
     } finally {
@@ -158,6 +162,58 @@ function RequestForSalePage() {
     } finally {
       setCancelDialogOpen(false);
       setSelectedRequest(null);
+    }
+  };
+
+  const handleUpdateRequest = async () => {
+    if (!selectedRequest || !priceDealed || isNaN(Number(priceDealed))) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid price",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const updatedNote = newNote.trim()
+        ? `${selectedRequest.note || ""}\n[${new Date().toLocaleDateString()}] ${newNote.trim()}`
+        : selectedRequest.note || "";
+
+      const response = await requestForSaleApi.update(selectedRequest.id, {
+        id: selectedRequest.id,
+        priceDealed: Number(priceDealed),
+        note: updatedNote,
+      });
+
+      if (response.isSuccess) {
+        toast({
+          title: "Success",
+          description: "Sale request updated successfully",
+        });
+        setUpdateDialogOpen(false);
+        setPriceDealed("");
+        setNote("");
+        setNewNote("");
+        setSelectedRequest(null);
+        fetchRequests({
+          pageNumber: currentPage,
+          searchTerm,
+          status: selectedStatus,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update sale request",
+        variant: "destructive",
+      });
     }
   };
 
@@ -271,6 +327,22 @@ function RequestForSalePage() {
                         Cancel Request
                       </DropdownMenuItem>
                     )}
+                    {(request.requestStatus ===
+                      REQUEST_FOR_SALE_STATUS.REJECTED ||
+                      request.requestStatus ===
+                        REQUEST_FOR_SALE_STATUS.CANCELED) && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setPriceDealed(request.priceDealed.toString());
+                          setNote(request.note || "");
+                          setNewNote("");
+                          setUpdateDialogOpen(true);
+                        }}
+                      >
+                        Revise Request
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -338,6 +410,67 @@ function RequestForSalePage() {
             <Button variant="destructive" onClick={handleCancelRequest}>
               Confirm
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Sale Request</DialogTitle>
+            <DialogDescription>
+              Update your offered price and add additional notes for this koi
+              fish.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="price" className="text-right">
+                Price ($)
+              </label>
+              <Input
+                id="price"
+                type="number"
+                value={priceDealed}
+                onChange={(e) => setPriceDealed(e.target.value)}
+                className="col-span-3"
+                placeholder="Enter your offered price"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <label className="text-right">Previous Notes</label>
+              <div className="col-span-3 rounded-md border p-2 text-sm">
+                {note || "No previous notes"}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="newNote" className="text-right">
+                Additional Note
+              </label>
+              <Input
+                id="newNote"
+                type="text"
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                className="col-span-3"
+                placeholder="Add new note to this request"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setUpdateDialogOpen(false);
+                setSelectedRequest(null);
+                setPriceDealed("");
+                setNote("");
+                setNewNote("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateRequest}>Update Request</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

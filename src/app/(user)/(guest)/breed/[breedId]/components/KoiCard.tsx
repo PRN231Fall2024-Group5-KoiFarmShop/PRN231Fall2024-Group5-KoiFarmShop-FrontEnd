@@ -108,20 +108,8 @@ const KoiCard: React.FC<KoiCardProps> = ({ koi }) => {
               {koi.koiBreeds.map((breed) => breed.name).join(", ")}
             </p>
             <p>
-              <span className="font-semibold">
-                {koi.age ? "Age:" : "Date of Birth:"}
-              </span>{" "}
-              {koi.age
-                ? `${koi.age} years`
-                : koi.dob
-                  ? new Date(koi.dob)
-                      .toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })
-                      .replace(/\//g, "-")
-                  : "Unknown"}
+              <span className="font-semibold">DoB:</span>{" "}
+              {new Date(koi.dob!).toLocaleDateString()}
             </p>
             <p>
               <span className="font-semibold">Seller:</span>{" "}
