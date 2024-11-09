@@ -45,11 +45,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import Image from "next/image";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const getValidImageUrl = (url: string | null | undefined): string => {
   if (!url) return "/images/no-image.png";
   if (url.startsWith("http") || url.startsWith("/")) return url;
   return `/images/${url}`;
+};
+
+// Add this type for the update request
+type UpdateRequestData = {
+  id: number;
+  priceDealed: number;
+  note?: string;
 };
 
 function KoiFishRequestForSale() {
@@ -64,6 +81,12 @@ function KoiFishRequestForSale() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [priceDealed, setPriceDealed] = useState("");
   const [note, setNote] = useState("");
+  const [selectedRequest, setSelectedRequest] = useState<RequestForSale | null>(
+    null,
+  );
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [newNote, setNewNote] = useState("");
+  const [requestToCancel, setRequestToCancel] = useState<number | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -141,6 +164,69 @@ function KoiFishRequestForSale() {
     }
   };
 
+  const handleUpdateRequest = async () => {
+    if (!priceDealed || isNaN(Number(priceDealed))) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid price",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const updatedNote = newNote.trim()
+        ? `${note}\n[${new Date().toLocaleDateString()}] ${newNote.trim()}`
+        : note;
+
+      const updateData: UpdateRequestData = {
+        id: selectedRequest!.id,
+        priceDealed: Number(priceDealed),
+        note: updatedNote,
+      };
+
+      const response = await requestForSaleApi.update(
+        selectedRequest!.id,
+        updateData,
+      );
+
+      if (response.isSuccess) {
+        toast({
+          title: "Success",
+          description: "Sale request updated successfully",
+        });
+        setCreateDialogOpen(false);
+        setPriceDealed("");
+        setNote("");
+        setNewNote("");
+        setSelectedRequest(null);
+        setIsUpdateMode(false);
+        fetchData();
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update sale request",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReviseRequest = (request: RequestForSale) => {
+    setSelectedRequest(request);
+    setPriceDealed(request.priceDealed.toString());
+    setNote(request.note || "");
+    setNewNote("");
+    setIsUpdateMode(true);
+    setCreateDialogOpen(true);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case "PENDING":
@@ -156,11 +242,42 @@ function KoiFishRequestForSale() {
     }
   };
 
+  // Add handleCancelRequest function after handleReviseRequest
+  const handleCancelRequest = async () => {
+    if (!requestToCancel) return;
+
+    try {
+      const response = await requestForSaleApi.cancel(requestToCancel);
+
+      if (response.isSuccess) {
+        toast({
+          title: "Success",
+          description: "Sale request canceled successfully",
+        });
+        fetchData();
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to cancel sale request",
+        variant: "destructive",
+      });
+    } finally {
+      setRequestToCancel(null);
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (!koiFish) return <div>Fish not found</div>;
 
-  const canCreateRequest = !requests.some(
-    (request) => request.requestStatus === REQUEST_FOR_SALE_STATUS.PENDING,
+  const canCreateRequest = requests.every(
+    (request) => request.requestStatus === REQUEST_FOR_SALE_STATUS.APPROVED,
   );
 
   return (
@@ -280,6 +397,7 @@ function KoiFishRequestForSale() {
               <TableHead>Created At</TableHead>
               <TableHead>Last Modified</TableHead>
               <TableHead>Note</TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -303,6 +421,31 @@ function KoiFishRequestForSale() {
                     : "-"}
                 </TableCell>
                 <TableCell>{request.note || "-"}</TableCell>
+                <TableCell>
+                  {request.requestStatus ===
+                    REQUEST_FOR_SALE_STATUS.PENDING && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setRequestToCancel(request.id)}
+                      className="mr-2"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                  {(request.requestStatus ===
+                    REQUEST_FOR_SALE_STATUS.REJECTED ||
+                    request.requestStatus ===
+                      REQUEST_FOR_SALE_STATUS.CANCELED) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleReviseRequest(request)}
+                    >
+                      Revise Request
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
             {requests.length === 0 && (
@@ -319,9 +462,13 @@ function KoiFishRequestForSale() {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Sale Request</DialogTitle>
+            <DialogTitle>
+              {isUpdateMode ? "Update Sale Request" : "Create Sale Request"}
+            </DialogTitle>
             <DialogDescription>
-              Enter your offered price and note for this koi fish.
+              {isUpdateMode
+                ? "Update your offered price and add additional notes for this koi fish."
+                : "Enter your offered price and note for this koi fish."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -338,31 +485,90 @@ function KoiFishRequestForSale() {
                 placeholder="Enter your offered price"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="note" className="text-right">
-                Note
-              </label>
-              <Input
-                id="note"
-                type="text"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                className="col-span-3"
-                placeholder="Optional note for your request"
-              />
-            </div>
+            {isUpdateMode ? (
+              <>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <label className="text-right">Previous Notes</label>
+                  <div className="col-span-3 rounded-md border p-2 text-sm">
+                    {note || "No previous notes"}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="newNote" className="text-right">
+                    Additional Note
+                  </label>
+                  <Input
+                    id="newNote"
+                    type="text"
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Add new note to this request"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="note" className="text-right">
+                  Note
+                </label>
+                <Input
+                  id="note"
+                  type="text"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Optional note for your request"
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setCreateDialogOpen(false)}
+              onClick={() => {
+                setCreateDialogOpen(false);
+                setIsUpdateMode(false);
+                setSelectedRequest(null);
+                setPriceDealed("");
+                setNote("");
+                setNewNote("");
+              }}
             >
               Cancel
             </Button>
-            <Button onClick={handleCreateRequest}>Create Request</Button>
+            <Button
+              onClick={isUpdateMode ? handleUpdateRequest : handleCreateRequest}
+            >
+              {isUpdateMode ? "Update Request" : "Create Request"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!requestToCancel}
+        onOpenChange={() => setRequestToCancel(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Sale Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this sale request? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep request</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelRequest}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, cancel request
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

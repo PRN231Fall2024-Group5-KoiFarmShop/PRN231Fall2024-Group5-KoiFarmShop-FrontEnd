@@ -79,14 +79,14 @@ export default function SaleRequestPage() {
     try {
       const response = await requestForSaleApi.getAllRequestForSales({
         pageNumber: currentPage,
-        pageSize: 10,
+        pageSize: 8,
         searchTerm,
         status: selectedStatus,
-        sortBy: "CreatedAt desc",
+        sortBy: "ModifiedAt desc",
       });
       setRequests(response.value);
       const totalCount = response["@odata.count"] || response.value.length;
-      setTotalPages(Math.ceil(totalCount / 10));
+      setTotalPages(Math.ceil(totalCount / 8));
     } catch (error) {
       toast({
         title: "Error",
@@ -114,7 +114,10 @@ export default function SaleRequestPage() {
       const response =
         type === "approve"
           ? await requestForSaleApi.approve(confirmDialog.request.id)
-          : await requestForSaleApi.reject(confirmDialog.request.id);
+          : await requestForSaleApi.reject(
+              confirmDialog.request.id,
+              rejectDialog.reason,
+            );
 
       if (response.isSuccess) {
         toast({
@@ -154,7 +157,10 @@ export default function SaleRequestPage() {
     }
 
     try {
-      const response = await requestForSaleApi.reject(rejectDialog.request.id);
+      const response = await requestForSaleApi.reject(
+        rejectDialog.request.id,
+        rejectDialog.reason,
+      );
 
       if (response.isSuccess) {
         toast({
@@ -401,7 +407,7 @@ export default function SaleRequestPage() {
               Please provide a reason for rejecting this request.
             </DialogDescription>
           </DialogHeader>
-          {/* <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="reason">Reason for Rejection</Label>
               <Input
@@ -413,7 +419,7 @@ export default function SaleRequestPage() {
                 placeholder="Enter the reason for rejection"
               />
             </div>
-          </div> */}
+          </div>
           <DialogFooter>
             <Button
               variant="outline"
