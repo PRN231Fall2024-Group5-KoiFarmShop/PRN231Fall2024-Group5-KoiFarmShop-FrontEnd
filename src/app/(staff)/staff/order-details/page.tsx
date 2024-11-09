@@ -56,6 +56,7 @@ type Task = {
 
 enum OrderDetailStatusEnum {
   PENDING = "PENDING",
+  ASSIGNED = "ASSIGNED",
   GETTINGFISH = "GETTINGFISH",
   ISSHIPPING = "ISSHIPPING",
   ISNUTURING = "ISNUTURING",
@@ -66,6 +67,7 @@ enum OrderDetailStatusEnum {
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
   GETTINGFISH: "bg-blue-100 text-blue-800",
+  ASSIGNED: "bg-blue-100 text-blue-800",
   ISSHIPPING: "bg-purple-100 text-purple-800",
   ISNUTURING: "bg-green-100 text-green-800",
   COMPLETED: "bg-gray-100 text-gray-800",
@@ -99,8 +101,10 @@ export default function OrderDetailsTask() {
       assign: `/order-details/${orderDetailsId}/assign`,
       approve: `/order-details/${orderDetailsId}/approve`,
       complete: `/order-details/${orderDetailsId}/complete`,
+      cancel: `/order-details/${orderDetailsId}/cancel`,
       reject: `/order-details/${orderDetailsId}/reject`,
       endSoon: `/order-details/${orderDetailsId}/ship`,
+      nurture: `/order-details/${orderDetailsId}/nurture`,
     };
 
     try {
@@ -123,6 +127,23 @@ export default function OrderDetailsTask() {
             Assign
           </button>
         );
+        case OrderDetailStatusEnum.ASSIGNED:
+          return (
+            <>
+              <button
+              onClick={() => handleAction(task.id, 'cancel')}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleAction(task.id, 'nurture')}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              Nurture
+            </button>
+            </>
+          );
       case OrderDetailStatusEnum.GETTINGFISH:
         return (
           <>
