@@ -357,8 +357,10 @@ export default function CertificatePage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-muted-foreground">Age</Label>
-                <p className="font-medium">{koiFish.age} years</p>
+                <Label className="text-muted-foreground">DoB</Label>
+                <p className="font-medium">
+                  {new Date(koiFish.dob!).toLocaleDateString()}
+                </p>
               </div>
               <div className="space-y-1">
                 <Label className="text-muted-foreground">Gender</Label>

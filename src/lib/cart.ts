@@ -15,6 +15,14 @@ export interface CartItem {
 
 const CART_STORAGE_KEY = "cart";
 
+export const CART_UPDATED_EVENT = "cartUpdated";
+
+export const dispatchCartUpdatedEvent = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(CART_UPDATED_EVENT));
+  }
+};
+
 export const getCart = (): CartItem[] => {
   if (typeof window === "undefined") {
     return [];
@@ -25,6 +33,7 @@ export const getCart = (): CartItem[] => {
 
 export const saveCart = (cart: CartItem[]) => {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  dispatchCartUpdatedEvent();
 };
 
 export const addToCart = (koiFish: KoiFish) => {

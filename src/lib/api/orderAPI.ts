@@ -41,6 +41,21 @@ const orderAPI = {
       };
     }
   },
+  cancelPendingOrder: async (orderId: number): Promise<ApiResponse<any>> => {
+    try {
+      const response = await axiosClient.post<ApiResponse<any>>(
+        `/order/${orderId}/cancelOrder`,
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("Error canceling order:", error);
+      return {
+        data: null,
+        message: "Failed to cancel order. Please try again.",
+        isSuccess: false,
+      };
+    }
+  },
 };
 
 export default orderAPI;

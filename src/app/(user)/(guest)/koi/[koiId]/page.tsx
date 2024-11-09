@@ -176,9 +176,9 @@ const KoiDetailPage = ({ params }: { params: { koiId: string } }) => {
               <p>
                 <strong>Gender:</strong> {koiDetails.gender}
               </p>
-              <p>
+              {/* <p>
                 <strong>Age:</strong> {koiDetails.age} years
-              </p>
+              </p> */}
               <p>
                 <strong>Size:</strong> {koiDetails.length} cm
               </p>

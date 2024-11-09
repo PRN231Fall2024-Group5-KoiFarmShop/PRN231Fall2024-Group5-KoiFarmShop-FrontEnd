@@ -3,11 +3,23 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import walletAPI from "@/lib/api/walletAPI";
+import orderAPI from "@/lib/api/orderAPI";
 import { useToast } from "@/hooks/use-toast";
 import { formatPriceVND } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface KoiFish {
   id: number;
@@ -65,6 +77,24 @@ function OrderHistoryPage() {
     return new Date(dateString).toLocaleString();
   };
 
+  const handleCancelOrder = async (orderId: number) => {
+    const response = await orderAPI.cancelPendingOrder(orderId);
+
+    if (response.isSuccess) {
+      toast({
+        title: "Success",
+        description: "Order cancelled successfully",
+      });
+      fetchOrderHistory(); // Refresh the orders list
+    } else {
+      toast({
+        title: "Error",
+        description: response.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Order History</h1>
@@ -107,7 +137,31 @@ function OrderHistoryPage() {
                     Note: {order.note}
                   </p>
                 )}
-                <div className="mt-4 flex justify-end">
+                <div className="mt-4 flex justify-end gap-2">
+                  {order.orderStatus === "PENDING" && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">Cancel Order</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to cancel this order? This
+                            action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>No, keep order</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleCancelOrder(order.id)}
+                          >
+                            Yes, cancel order
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   <Link href={`/profile/order-history/${order.id}`}>
                     <Button variant="outline">View Detail</Button>
                   </Link>

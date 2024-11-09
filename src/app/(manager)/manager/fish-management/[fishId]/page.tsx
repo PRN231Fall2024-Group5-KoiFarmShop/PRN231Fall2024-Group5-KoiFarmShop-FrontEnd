@@ -1,109 +1,127 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Toaster } from '@/components/ui/toaster'
-import { ReactFbImageGrid } from "@uydev/react-fb-image-grid"
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import React, { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/toaster";
+import { ReactFbImageGrid } from "@uydev/react-fb-image-grid";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 // Assuming you have a koiFishApi with these methods
-import koiFishApi from '@/lib/api/koiFishApi'
-import { useToast } from '@/hooks/use-toast'
+import koiFishApi from "@/lib/api/koiFishApi";
+import { useToast } from "@/hooks/use-toast";
 
 type Certificate = {
-  id: number
-  koiFishId: number
-  certificateType: string
-  certificateUrl: string
-}
+  id: number;
+  koiFishId: number;
+  certificateType: string;
+  certificateUrl: string;
+};
 
 const certificateSchema = z.object({
-  certificateType: z.string().min(1, 'Certificate type is required').max(100, 'Certificate type must be 100 characters or less'),
-  certificateUrl: z.string().url('Invalid URL').min(1, 'Certificate URL is required'),
-})
+  certificateType: z
+    .string()
+    .min(1, "Certificate type is required")
+    .max(100, "Certificate type must be 100 characters or less"),
+  certificateUrl: z
+    .string()
+    .url("Invalid URL")
+    .min(1, "Certificate URL is required"),
+});
 
-type CertificateFormValues = z.infer<typeof certificateSchema>
+type CertificateFormValues = z.infer<typeof certificateSchema>;
 
 export default function KoiFishDetailsPage() {
-  const {toast} = useToast()
-  const router = useRouter()
-  const { fishId } = useParams()
-  const [fishDetails, setFishDetails] = useState<any>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [certificates, setCertificates] = useState<Certificate[]>([])
+  const { toast } = useToast();
+  const router = useRouter();
+  const { fishId } = useParams();
+  const [fishDetails, setFishDetails] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
 
   const form = useForm<CertificateFormValues>({
     resolver: zodResolver(certificateSchema),
     defaultValues: {
-      certificateType: '',
-      certificateUrl: '',
+      certificateType: "",
+      certificateUrl: "",
     },
-  })
+  });
 
   useEffect(() => {
-    fetchFishDetails()
-    fetchCertificates()
-  }, [fishId])
+    fetchFishDetails();
+    fetchCertificates();
+  }, [fishId]);
 
   const fetchFishDetails = async () => {
-    setLoading(true)
-    const response = await koiFishApi.getById(+fishId)
+    setLoading(true);
+    const response = await koiFishApi.getById(+fishId);
     if (response.isSuccess) {
-      setFishDetails(response.data)
+      setFishDetails(response.data);
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const fetchCertificates = async () => {
-    const response = await koiFishApi.getCertificates(+fishId)
+    const response = await koiFishApi.getCertificates(+fishId);
     if (response.isSuccess) {
-      setCertificates(response.data)
+      setCertificates(response.data);
     }
-  }
+  };
 
   const handleAddCertificate = async (data: CertificateFormValues) => {
     const response = await koiFishApi.addCertificate({
       koiFishId: +fishId,
-      ...data
-    })
+      ...data,
+    });
     if (response.isSuccess) {
       toast({
         title: "Success",
         description: "Certificate added successfully",
-      })
-      fetchCertificates()
-      form.reset()
+      });
+      fetchCertificates();
+      form.reset();
     } else {
       toast({
         title: "Error",
         description: "Failed to add certificate",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   if (loading) {
-    return <div className="container mx-auto p-4">Loading...</div>
+    return <div className="container mx-auto p-4">Loading...</div>;
   }
 
   return (
     <div className="container mx-auto p-4">
       <Toaster />
-      <h1 className="text-2xl font-bold mb-6">{fishDetails?.name} - Details</h1>
+      <h1 className="mb-6 text-2xl font-bold">{fishDetails?.name} - Details</h1>
 
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col gap-6 md:flex-row">
         {/* Left Column - Fish Images */}
         <div className="md:w-1/2">
-          <h2 className="text-xl font-bold mb-4">Fish Images</h2>
+          <h2 className="mb-4 text-xl font-bold">Fish Images</h2>
           {fishDetails?.koiFishImages?.length > 0 ? (
-            <ReactFbImageGrid images={fishDetails.koiFishImages.map((image: any) => image?.imageUrl)} className="w-full aspect-square" />
+            <ReactFbImageGrid
+              images={fishDetails.koiFishImages.map(
+                (image: any) => image?.imageUrl,
+              )}
+              className="aspect-square w-full"
+            />
           ) : (
             <p>No images available for this fish.</p>
           )}
@@ -120,7 +138,7 @@ export default function KoiFishDetailsPage() {
 
             {/* Information Tab */}
             <TabsContent value="information">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <h3 className="font-semibold">Fish Name</h3>
                   <p>{fishDetails?.name}</p>
@@ -131,11 +149,11 @@ export default function KoiFishDetailsPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Gender</h3>
-                  <p>{fishDetails?.gender ? 'Male' : 'Female'}</p>
+                  <p>{fishDetails?.gender ? "Male" : "Female"}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold">Age</h3>
-                  <p>{fishDetails?.age} years</p>
+                  <h3 className="font-semibold">DoB</h3>
+                  <p>{new Date(fishDetails?.dob!).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Length</h3>
@@ -151,19 +169,25 @@ export default function KoiFishDetailsPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Last Health Check</h3>
-                  <p>{new Date(fishDetails?.lastHealthCheck).toLocaleString()}</p>
+                  <p>
+                    {new Date(fishDetails?.lastHealthCheck).toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Price</h3>
-                  <p>{fishDetails?.price ? `${fishDetails.price} VND` : 'Not available'}</p>
+                  <p>
+                    {fishDetails?.price
+                      ? `${fishDetails.price} VND`
+                      : "Not available"}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Available for Sale</h3>
-                  <p>{fishDetails?.isAvailableForSale ? 'Yes' : 'No'}</p>
+                  <p>{fishDetails?.isAvailableForSale ? "Yes" : "No"}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Sold</h3>
-                  <p>{fishDetails?.isSold ? 'Yes' : 'No'}</p>
+                  <p>{fishDetails?.isSold ? "Yes" : "No"}</p>
                 </div>
               </div>
             </TabsContent>
@@ -179,7 +203,12 @@ export default function KoiFishDetailsPage() {
                         <CardTitle>{cert.certificateType}</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <a href={cert.certificateUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                        <a
+                          href={cert.certificateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
                           View Certificate
                         </a>
                       </CardContent>
@@ -190,8 +219,13 @@ export default function KoiFishDetailsPage() {
                 )}
 
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleAddCertificate)} className="space-y-4">
-                    <h3 className="text-lg font-semibold">Add New Certificate</h3>
+                  <form
+                    onSubmit={form.handleSubmit(handleAddCertificate)}
+                    className="space-y-4"
+                  >
+                    <h3 className="text-lg font-semibold">
+                      Add New Certificate
+                    </h3>
                     <FormField
                       control={form.control}
                       name="certificateType"
@@ -231,12 +265,15 @@ export default function KoiFishDetailsPage() {
           </Tabs>
 
           <div className="mt-4">
-            <Button variant="outline" onClick={() => router.push('/manager/fish-management')}>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/manager/fish-management")}
+            >
               Back to List
             </Button>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
